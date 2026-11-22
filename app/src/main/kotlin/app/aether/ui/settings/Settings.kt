@@ -126,6 +126,8 @@ fun SettingsScreen() {
     val balance by settings.balance.collectAsStateWithLifecycle()
     val mono by settings.mono.collectAsStateWithLifecycle()
     val preamp by settings.preampDb.collectAsStateWithLifecycle()
+    val galaxyAccent by settings.galaxyAccent.collectAsStateWithLifecycle()
+    val galaxy3d by settings.galaxy3d.collectAsStateWithLifecycle()
     val privateDownloads by settings.privateDownloads.collectAsStateWithLifecycle()
     val movingLeft by container.downloads.movedLeft.collectAsStateWithLifecycle()
     val automix by settings.automix.collectAsStateWithLifecycle()
@@ -318,6 +320,20 @@ fun SettingsScreen() {
                     options = listOf("Simple", "Liquid"),
                     selected = if (simpleGlass) 0 else 1,
                     onSelect = { settings.setSimpleGlass(it == 0) },
+                )
+                Choice(
+                    title = "Galaxy colour",
+                    detail = "The tint of the stars in Galaxy's sky and of the constellations in your Library. The sky stays pure black.",
+                    options = app.aether.ui.home.GalaxyAccents.map { it.first },
+                    selected = galaxyAccent.coerceIn(0, app.aether.ui.home.GalaxyAccents.lastIndex),
+                    onSelect = { settings.setGalaxyAccent(it) },
+                )
+                Choice(
+                    title = "Galaxy sky",
+                    detail = "Picture is the artwork it ships with. 3D draws about two thousand stars in space, turning slowly; drag sideways on the home sky to turn it yourself.",
+                    options = listOf("Picture", "3D"),
+                    selected = if (galaxy3d) 1 else 0,
+                    onSelect = { settings.setGalaxy3d(it == 1) },
                 )
             }
         }
