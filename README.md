@@ -1,4 +1,4 @@
-# Galaxy, Android test build
+# Galaxy, Android music app (test build)
 
 Galaxy is a modified AETHER v3.0.0, upstream commit 0117c6eb0deaca03a045d4feb2fdfc1bca90d046.
 Original project and author credit: https://github.com/GHOSTxASR/AETHER, GHOSTxASR / Ashmit Roy.
@@ -6,16 +6,16 @@ The GPL-3.0 license and existing third-party notices are retained. Modifications
 
 ## Changes
 
-- App name, onboarding wordmark, startup wordmark and user-facing labels renamed to Galaxy.
-- Separate application ID: app.galaxy.music.debug, so this test build does not overwrite AETHER.
+- Galaxy name, wordmark and labels throughout the app. The start animation, page feet and Library header use the Galaxy spiral-galaxy mark.
+- Separate application ID: app.galaxy.music.debug, so it installs as its own app.
 - True-black base with white/neutral visual accents. The red signal accent is now light neutral gray so the playback needle remains visible against black.
 - Listen's statue artwork replaced with an original depth-rendered spiral-galaxy image, slowly rotated above 135 twinkling background stars. This is an artistic visualization with a dimensional appearance, not an astronomy photograph or interactive 3D model.
 - Galaxy animation capped at approximately 30 redraws per second. Paused off-screen, while scrolling, when another room covers it, when the app is not resumed, and when reduced motion is selected. No new network requests or permissions.
 - Existing navigation, player, glass and transition animations retained. The requested galaxy replaces the statue-specific visual animation only.
 - First-launch welcome has a true-black star field rather than water footage.
 - Matching black-and-white spiral galaxy adaptive launcher icon.
-- About credits the original AETHER author and GPL-3.0.
-- Upstream AETHER update button removed from this custom build, to avoid offering an incompatible app package. Galaxy updates must be built and supplied separately.
+- The About section credits the original author and GPL-3.0.
+- The upstream update button is removed, to avoid offering an incompatible app package. Galaxy updates are built and supplied separately.
 
 ## Requirements and build
 
