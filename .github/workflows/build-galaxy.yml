@@ -35,8 +35,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Set up Android command-line tools
+        run: |
+          mkdir -p "$RUNNER_TEMP/galaxy-cli"
+          curl -fL https://dl.google.com/android/repository/commandlinetools-linux-14742923_latest.zip -o "$RUNNER_TEMP/galaxy-cli.zip"
+          unzip -q "$RUNNER_TEMP/galaxy-cli.zip" -d "$RUNNER_TEMP/galaxy-cli"
+          echo "$RUNNER_TEMP/galaxy-cli/cmdline-tools/bin" >> "$GITHUB_PATH"
+          yes | "$RUNNER_TEMP/galaxy-cli/cmdline-tools/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses || true
       - name: Install exact Android toolchain
         run: sdkmanager 'platform-tools' 'platforms;android-37.0' 'build-tools;36.0.0' 'build-tools;37.0.0' 'ndk;28.2.13676358' 'cmake;3.22.1'
       - name: Build signed test APK
