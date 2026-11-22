@@ -103,6 +103,12 @@ interface PlaybackEnvironment {
     /** Seconds the sleep timer fades the music out over; 0 is the default behaviour. */
     val sleepFadeSeconds: StateFlow<Int> get() = FadeNone
 
+    /** Left-right balance, -1 to 1; 0 is the centre. */
+    val balance: StateFlow<Float> get() = BalanceCentre
+
+    /** Whether both ears hear the same, the two channels added. */
+    val mono: StateFlow<Boolean> get() = AutomixOff
+
     /** What the song's own catalogue would play after [track] (its radio); empty when it has nothing. */
     suspend fun suggestionsAfter(track: Track): List<Track> = emptyList()
 
@@ -284,6 +290,8 @@ class PlaybackService : MediaLibraryService() {
         scope.launch {
             combine(AbRepeat.a, AbRepeat.b) { a, b -> a to b }.collect { armAbRepeat() }
         }
+        scope.launch { env.balance.collect { StereoOutput.balance = it; reportRoute() } }
+        scope.launch { env.mono.collect { StereoOutput.mono = it; reportRoute() } }
         scope.launch { env.lateCopies.collect(::carryOver) }
         scope.launch { restore() }
         scope.launch { countPlays() }
@@ -293,7 +301,7 @@ class PlaybackService : MediaLibraryService() {
     private fun reportRoute() {
         session?.setSessionExtras(Bundle().apply {
             putString(EXTRA_OUTPUT, route.device)
-            putBoolean(EXTRA_BIT_PERFECT, route.bitPerfect && !active.equaliser.shaping)
+            putBoolean(EXTRA_BIT_PERFECT, route.bitPerfect && !active.equaliser.shaping && !StereoOutput.active)
             carried?.let { putBundle(EXTRA_CARRIED, it.toBundle()) }
         })
     }
@@ -937,6 +945,8 @@ private const val MaxLeadMs = 2_000L
 private const val SleepFadeStepMs = 50L
 
 /** Automix's setting for an environment that has none. */
+private val BalanceCentre: StateFlow<Float> = kotlinx.coroutines.flow.MutableStateFlow(0f)
+
 private val FadeNone: StateFlow<Int> = kotlinx.coroutines.flow.MutableStateFlow(0)
 
 private val AutomixOff: StateFlow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)
