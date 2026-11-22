@@ -38,6 +38,10 @@ private data class GalaxyPoint(val x: Float, val y: Float, val radius: Float, va
 @Composable
 internal fun GalaxyMasthead(modifier: Modifier = Modifier, onScreen: () -> Boolean, scrolling: () -> Boolean) {
     val reduce = LocalReduceMotion.current
+    val galaxySettings = app.aether.ui.common.LocalContainer.current.settings
+    val accentIndex by galaxySettings.galaxyAccent.collectAsStateWithLifecycle()
+    val galaxy3d by galaxySettings.galaxy3d.collectAsStateWithLifecycle()
+    val tint = androidx.compose.ui.graphics.lerp(Color.White, galaxyAccent(accentIndex), .6f)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val state by lifecycle.currentStateFlow.collectAsStateWithLifecycle()
     val hidden = LocalRoomsHidden.current
@@ -69,7 +73,7 @@ internal fun GalaxyMasthead(modifier: Modifier = Modifier, onScreen: () -> Boole
             stars.forEachIndexed { i, s ->
                 val p = Offset(s.x * size.width, s.y * size.height * .89f)
                 val light = (.50f + .38f * sin(t * (.55f + s.light) + i)).coerceIn(.1f, .95f)
-                drawCircle(Color.White.copy(alpha = light), s.radius * unit, p)
+                drawCircle(tint.copy(alpha = light), s.radius * unit, p)
                 if (i % 23 == 0) {
                     val a = Color.White.copy(alpha = light * .55f)
                     drawLine(a, p - Offset(5f * unit, 0f), p + Offset(5f * unit, 0f), .55f * unit)
@@ -78,7 +82,7 @@ internal fun GalaxyMasthead(modifier: Modifier = Modifier, onScreen: () -> Boole
             }
             drawRect(Brush.verticalGradient(0f to Color.Transparent, .76f to Color.Transparent, 1f to Color.Black))
         }
-        androidx.compose.foundation.Image(
+        if (galaxy3d) Galaxy3D(galaxyAccent(accentIndex), { seconds }, Modifier.fillMaxSize().padding(bottom = 90.dp)) else androidx.compose.foundation.Image(
             painter = androidx.compose.ui.res.painterResource(app.aether.R.drawable.galaxy_realistic),
             contentDescription = "Depth-rendered spiral galaxy, an artistic visualization",
             contentScale = androidx.compose.ui.layout.ContentScale.Fit,
