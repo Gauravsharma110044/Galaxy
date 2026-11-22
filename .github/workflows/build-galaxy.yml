@@ -1,4 +1,4 @@
-name: Build Galaxy test APK
+name: Build Galaxy APK
 on:
   workflow_dispatch:
   push:
@@ -162,11 +162,11 @@ jobs:
           "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify app/build/outputs/apk/debug/app-debug.apk
       - name: Package corresponding source and checksums
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk Galaxy-3.0.0-test.apk
+          cp app/build/outputs/apk/debug/app-debug.apk Galaxy-3.0.apk
           git archive --format=zip HEAD -o Galaxy-source-3.0.0.zip
-          sha256sum Galaxy-3.0.0-test.apk Galaxy-source-3.0.0.zip > SHA256SUMS.txt
-      - name: Publish test candidate and corresponding source
+          sha256sum Galaxy-3.0.apk Galaxy-source-3.0.0.zip > SHA256SUMS.txt
+      - name: Publish release and corresponding source
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create galaxy-test-${{ github.run_number }} Galaxy-3.0.0-test.apk Galaxy-source-3.0.0.zip SHA256SUMS.txt --title 'Galaxy 3.0.1 test candidate' --prerelease --notes 'Branding sweep: Galaxy name everywhere in the app UI and the Galaxy icon in the start animation. Space-themed AETHER derivative, GPL-3.0. Original AETHER by GHOSTxASR / Ashmit Roy. Android 10+. Separate installation package app.galaxy.music.debug. Build and APK signature checked; live phone UI, playback and performance have not been verified. The galaxy is an artistic depth-rendered visualization with restrained rotation and twinkling stars, not an astronomy photograph or interactive 3D model. This is a debug-signed test build. Review BUILDING-GALAXY.md before using or rebuilding.'
+          gh release create v3.0.0 Galaxy-3.0.apk Galaxy-source-3.0.0.zip SHA256SUMS.txt --title 'Galaxy 3.0' --notes 'Galaxy 3.0. A space-themed derivative of AETHER, GPL-3.0. Original AETHER by GHOSTxASR / Ashmit Roy. Android 10+. Package app.galaxy.music. Signed with the fixed Galaxy key, so later versions install over this one. Source and SHA256SUMS are attached. Build and APK signature were checked in CI; phone UI, playback and performance have not been verified on a device.'
