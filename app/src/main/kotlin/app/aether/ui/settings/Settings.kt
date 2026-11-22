@@ -283,7 +283,7 @@ fun SettingsScreen() {
                     selected = Balances.indexOfFirst { kotlin.math.abs(it.second - balance) < 0.01f }.let { if (it < 0) 2 else it },
                     onSelect = { settings.setBalance(Balances[it].second) },
                 )
-                Toggle("Mono", "Both ears hear the left and right channels added together, for one earbud or a single speaker.", mono) { settings.setMono(!mono) }
+                Toggle("Mono", "Both ears hear the left and right channels added together, for one earbud or a single speaker. Applies after you close and reopen Galaxy.", mono) { settings.setMono(!mono) }
                 Choice(
                     title = "Sleep timer fade-out",
                     detail = "How long the music takes to fade to nothing before the sleep timer stops it. Off stops it as before (or fades over the crossfade's length when sleeping after a song).",
