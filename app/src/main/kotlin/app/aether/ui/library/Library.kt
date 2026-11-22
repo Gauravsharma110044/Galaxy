@@ -116,6 +116,7 @@ fun LibraryScreen() {
     val scope = rememberCoroutineScope()
     var shelf by rememberSaveable { mutableStateOf(Shelf.Playlists) }
     var naming by remember { mutableStateOf(false) }
+    var historyView by rememberSaveable { mutableStateOf(0) }
     var importing by remember { mutableStateOf(false) }
     val bringing by container.transfer.state.collectAsStateWithLifecycle()
     val liked by container.library.liked.collectAsStateWithLifecycle(emptyList())
@@ -257,7 +258,10 @@ fun LibraryScreen() {
                     }
                 }
                 Shelf.History -> {
-                    if (history.isEmpty()) item { Notice("Nothing played yet", "Songs you listen to past their first half-minute appear here.") }
+                    item(key = "history-tools") {
+                        GlassSegments(listOf("Plays", "Stats", "Smart", "Duplicates"), historyView, { historyView = it }, Modifier.padding(horizontal = Space.edge, vertical = 6.dp))
+                    }
+                    if (historyView != 0) item(key = "insights:$historyView") { InsightsPane(historyView) } else if (history.isEmpty()) item { Notice("Nothing played yet", "Songs you listen to past their first half-minute appear here.") }
                     else {
                         val byDay = history.groupBy { Instant.ofEpochMilli(it.at).atZone(ZoneId.systemDefault()).toLocalDate() }
                         byDay.forEach { (day, plays) ->
