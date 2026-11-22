@@ -598,6 +598,9 @@ class PlaybackService : MediaLibraryService() {
     /** The send of the A-B repeat's message: at B the player is taken back to A, on the player's own clock. */
     private var abMessage: androidx.media3.exoplayer.PlayerMessage? = null
 
+    private var speedTouched = false
+    private var silenceTouched = false
+
     private fun armAbRepeat() {
         abMessage?.cancel()
         abMessage = null
