@@ -20,6 +20,19 @@ internal object StereoOutput {
     /** A gain applied to everything, in decibels. */
     @Volatile var preampDb = 0f
 
+    private var decided = false
+    private var inChain = false
+
+    /**
+     * The processor sits in the sound path only when one of the three choices was already on as the
+     * player was built (the first time decides, for every player after it). With all of them off the
+     * path is exactly the one without it, so a phone that never uses them is not touched by it.
+     */
+    @Synchronized fun processorIfWanted(): StereoProcessor? {
+        if (!decided) { decided = true; inChain = active }
+        return if (inChain) StereoProcessor() else null
+    }
+
     /** Whether the sound is being changed at all. */
     val active: Boolean get() = mono || abs(balance) > 0.001f || abs(preampDb) > 0.05f
 }
