@@ -100,6 +100,9 @@ interface PlaybackEnvironment {
     /** Whether silent stretches inside a song are skipped. */
     val skipSilence: StateFlow<Boolean> get() = AutomixOff
 
+    /** Seconds the sleep timer fades the music out over; 0 is the default behaviour. */
+    val sleepFadeSeconds: StateFlow<Int> get() = FadeNone
+
     /** What the song's own catalogue would play after [track] (its radio); empty when it has nothing. */
     suspend fun suggestionsAfter(track: Track): List<Track> = emptyList()
 
@@ -223,7 +226,7 @@ class PlaybackService : MediaLibraryService() {
             // Bit-perfect, the mixer takes one stream through untouched: two songs at once aren't that.
             // And the sleep timer due at this song's end: there's no next song to run into (BitChord's).
             // And a TV playing: it plays one song at a time, from this phone, with no second player to mix in.
-            blocked = { route.bitPerfect || SleepTimer.afterTrack.value || cast.active },
+            blocked = { route.bitPerfect || SleepTimer.afterTrack.value || cast.active || AbRepeat.active },
             onCarrying = ::onCarrying,
             onCarryEnded = ::onCarryEnded,
             soundAlignment = { SoundAlignment(active.meter, helperMeter) },
@@ -270,10 +273,16 @@ class PlaybackService : MediaLibraryService() {
             }
         }
         scope.launch {
-            env.skipSilence.collect { on ->
-                active.player.skipSilenceEnabled = on
-                spare?.player?.skipSilenceEnabled = on
-            }
+            // Silence skipping moves song positions about, which crossfade and Automix time their
+            // endings by, so it stands down while either is on.
+            combine(env.skipSilence, env.automix, env.crossfadeSeconds) { skip, mix, fade -> skip && !mix && fade == 0 }
+                .collect { on ->
+                    active.player.skipSilenceEnabled = on
+                    spare?.player?.skipSilenceEnabled = on
+                }
+        }
+        scope.launch {
+            combine(AbRepeat.a, AbRepeat.b) { a, b -> a to b }.collect { armAbRepeat() }
         }
         scope.launch { env.lateCopies.collect(::carryOver) }
         scope.launch { restore() }
@@ -415,7 +424,7 @@ class PlaybackService : MediaLibraryService() {
             audio = automixAudio,
             performance = { AutomixState.automixPerformanceMode.value },
             // Not while a TV plays: nothing is mixed there, and measuring would only spend the phone.
-            wanted = { AutomixState.smartFadeEnabled.value && !cast.active },
+            wanted = { AutomixState.smartFadeEnabled.value && !cast.active && !AbRepeat.active },
         )
         automix = AutomixController(
             scope,
@@ -533,11 +542,28 @@ class PlaybackService : MediaLibraryService() {
         scope.launch {
             SleepTimer.deadline.collectLatest { deadline ->
                 if (deadline == null) return@collectLatest
-                val remaining = deadline - SystemClock.elapsedRealtime()
-                if (remaining > 0) delay(remaining)
-                // Through the session's player: a TV playing is paused too.
-                speaker.pause()
-                SleepTimer.cancel()
+                try {
+                    val fadeMs = env.sleepFadeSeconds.value * 1000L
+                    val remaining = deadline - SystemClock.elapsedRealtime()
+                    if (fadeMs > 0 && remaining > fadeMs) delay(remaining - fadeMs)
+                    val left = deadline - SystemClock.elapsedRealtime()
+                    if (fadeMs > 0 && left > 0 && !cast.active) {
+                        // The volume falls as a crossfade's outgoing side does, to nothing at the deadline.
+                        while (true) {
+                            val r = deadline - SystemClock.elapsedRealtime()
+                            if (r <= 0) break
+                            player.volume = CrossfadeRules.fadeOut(1f - r.toFloat() / left)
+                            sleepFading = true
+                            delay(SleepFadeStepMs)
+                        }
+                    } else if (left > 0) delay(left)
+                    // Through the session's player: a TV playing is paused too.
+                    speaker.pause()
+                    SleepTimer.cancel()
+                } finally {
+                    // Cancelled or done: whatever the fade did to the volume is undone for the next play.
+                    sleepFadeEnd()
+                }
             }
         }
         scope.launch {
@@ -554,14 +580,34 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
+    /** The send of the A-B repeat's message: at B the player is taken back to A, on the player's own clock. */
+    private var abMessage: androidx.media3.exoplayer.PlayerMessage? = null
+
+    private fun armAbRepeat() {
+        abMessage?.cancel()
+        abMessage = null
+        val a = AbRepeat.a.value ?: return
+        val b = AbRepeat.b.value ?: return
+        if (b <= a) return
+        val p = player
+        abMessage = p.createMessage { _, _ -> p.seekTo(a) }
+            .setLooper(p.applicationLooper)
+            .setPosition(p.currentMediaItemIndex, b)
+            .setDeleteAfterDelivery(false)
+            .send()
+        // Set at B the instant it is passed: go back at once, or the first loop is missed.
+        if (p.currentPosition >= b - 50) p.seekTo(a)
+    }
+
     /** Whether [sleepFadeStep] has the session's player below full volume. */
     private var sleepFading = false
 
     private fun sleepFadeStep() {
         // A TV's song ends as it ends: there's no fading the phone's player under it.
         if (cast.active) return sleepFadeEnd()
-        val seconds = crossfader.seconds
-        if (AutomixState.smartFadeEnabled.value || seconds <= 0) return sleepFadeEnd()
+        val chosen = env.sleepFadeSeconds.value
+        val seconds = if (chosen > 0) chosen else crossfader.seconds
+        if (chosen <= 0 && (AutomixState.smartFadeEnabled.value || seconds <= 0)) return sleepFadeEnd()
         val duration = player.duration.takeIf { it != C.TIME_UNSET && it > 0 } ?: return
         val fadeMs = seconds * 1000L
         val remaining = duration - player.currentPosition
@@ -607,6 +653,7 @@ class PlaybackService : MediaLibraryService() {
     }
 
     private fun songChanged(item: MediaItem?) {
+        AbRepeat.clear()
         retried = null
         if (pendingCopy?.value != item?.mediaId) pendingCopy = null
         saveSoon()
@@ -890,6 +937,8 @@ private const val MaxLeadMs = 2_000L
 private const val SleepFadeStepMs = 50L
 
 /** Automix's setting for an environment that has none. */
+private val FadeNone: StateFlow<Int> = kotlinx.coroutines.flow.MutableStateFlow(0)
+
 private val AutomixOff: StateFlow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)
 
 /** Playback speed for an environment that has none. */
