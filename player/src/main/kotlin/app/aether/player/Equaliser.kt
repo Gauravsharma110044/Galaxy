@@ -42,7 +42,7 @@ internal class ShapedRenderers(
             // equaliser and Automix do is heard soon after it's done.
             .setAudioTrackBufferSizeProvider(SpeedSizedBuffer)
             // The meter after the equaliser hears what's heard, and passes every byte on as it came.
-            .setAudioProcessors(listOfNotNull(equaliser, transition, meter).toTypedArray())
+            .setAudioProcessors(listOfNotNull(equaliser, StereoProcessor(), transition, meter).toTypedArray())
             .build()
 }
 
