@@ -402,6 +402,11 @@ class Settings(context: Context) {
     val preampDb: StateFlow<Float> = _preamp.asStateFlow()
     fun setPreampDb(value: Float) { prefs.edit().putFloat(PREAMP, value).apply(); _preamp.value = value }
 
+    private val _privateDownloads = flag(PRIVATE_DOWNLOADS, true)
+    /** Kept songs stay inside Galaxy instead of being written to the Music folder. */
+    val privateDownloads: StateFlow<Boolean> = _privateDownloads.asStateFlow()
+    fun setPrivateDownloads(on: Boolean) = set(PRIVATE_DOWNLOADS, on, _privateDownloads)
+
     private val _mono = flag(MONO, false)
     /** Both ears hear the left and right channels added together. */
     val mono: StateFlow<Boolean> = _mono.asStateFlow()
@@ -492,6 +497,7 @@ class Settings(context: Context) {
         const val SLEEP_FADE = "sleep_fade_seconds"
         const val BALANCE = "balance"
         const val MONO = "mono"
+        const val PRIVATE_DOWNLOADS = "private_downloads"
         const val PREAMP = "preamp_db"
         const val AUTOMIX = "automix"
         const val SONG_ORDERS = "song_orders"
