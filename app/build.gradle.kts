@@ -35,6 +35,12 @@ android {
         resValue("string", "aether_cast_receiver", providers.gradleProperty("aether.castReceiverId").orNull ?: "CC1AD845")
     }
     signingConfigs {
+        getByName("debug") {
+            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         if (releaseStore != null) {
             create("release") {
                 storeFile = file(releaseStore)
