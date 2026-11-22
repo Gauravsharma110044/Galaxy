@@ -13,23 +13,91 @@ jobs:
     steps:
       - name: Checkout Galaxy customization
         uses: actions/checkout@v4
-      - name: Checkout pinned AETHER source
-        uses: actions/checkout@v4
-        with:
-          repository: GHOSTxASR/AETHER
-          ref: 0117c6eb0deaca03a045d4feb2fdfc1bca90d046
-          path: upstream
-          persist-credentials: false
-      - name: Expand Galaxy source and retain original notices
+      - name: Apply Galaxy branding sweep and keep the source in sync
         run: |
-          unzip -oq *Galaxy-changes-3.0.0.zip -d upstream
-          rsync -a --exclude='.git' upstream/ ./
-          rm -rf upstream
-          cp BUILDING-GALAXY.md README.md
+          if ! grep -q GalaxyMark core/designsystem/src/main/kotlin/app/aether/core/designsystem/component/Wordmark.kt; then
+          python3 - <<'PY'
+          import re, os
+          LIT = re.compile(r'"(?:[^"\\]|\\.)*"')
+          SKIP_SUB = ('GHOSTxASR', 'AETHER_', 'AETHER/', 'AETHER:Cast', 'app.aether', '**AETHER', 'Releases.kt')
+          SKIP_FILES = ('update/Releases.kt', 'app/src/main/kotlin/app/aether/ui/settings/Settings.kt')
+          n = 0
+          for root in ['app', 'core', 'player', 'sources', 'ytmusic']:
+              for d, _, fs in os.walk(root):
+                  if '/src/test' in d or '/build' in d:
+                      continue
+                  for f in fs:
+                      if not f.endswith('.kt'):
+                          continue
+                      p = os.path.join(d, f)
+                      if p.endswith(SKIP_FILES):
+                          continue
+                      out, ch = [], False
+                      for l in open(p, encoding='utf-8'):
+                          s = l.strip()
+                          if s.startswith(('//', '*', '/*')) or 'startsWith("AETHER"' in l:
+                              out.append(l); continue
+                          def fix(m):
+                              t = m.group(0)
+                              if any(k in t for k in SKIP_SUB) or not re.search('AETHER|Aether', t):
+                                  return t
+                              return t.replace('AETHER', 'Galaxy').replace('Aether', 'Galaxy')
+                          nl = LIT.sub(fix, l)
+                          if nl != l: ch = True; n += 1
+                          out.append(nl)
+                      if ch:
+                          open(p, 'w', encoding='utf-8').write(''.join(out))
+          print('literal lines rebranded:', n)
+
+          def sub(path, a, b):
+              t = open(path, encoding='utf-8').read()
+              assert a in t, (path, a)
+              open(path, 'w', encoding='utf-8').write(t.replace(a, b, 1))
+
+          # Settings: only the user-facing "last time AETHER closed" is a comment; keep attribution lines as they are.
+          # Wordmark strapline
+          sub('core/designsystem/src/main/kotlin/app/aether/core/designsystem/component/Wordmark.kt', '"A Music Sanctuary"', '"Music among the stars"')
+          # Galaxy mark replaces the cross of light everywhere it was drawn (boot film symbol, page feet, nav, lyrics)
+          W = 'core/designsystem/src/main/kotlin/app/aether/core/designsystem/component/Wordmark.kt'
+          sub(W, 'fun DrawScope.drawLightCross(intensity: Float = 1f, centre: Offset = center, extent: Float = size.minDimension) {\n',
+          '''/** The Galaxy launcher artwork, installed once by the app from its own resources. */
+          object GalaxyMark {
+              @Volatile private var mark: android.graphics.drawable.Drawable? = null
+              fun install(context: android.content.Context, resId: Int) {
+                  mark = androidx.core.content.ContextCompat.getDrawable(context, resId)?.mutate()
+              }
+              internal fun drawable() = mark
+          }
+
+          /** The Galaxy mark (the launcher icon's spiral galaxy), centred on [centre]; [extent] is the old cross's size. */
+          fun DrawScope.drawLightCross(intensity: Float = 1f, centre: Offset = center, extent: Float = size.minDimension) {
+              val d = GalaxyMark.drawable()
+              if (d == null) { drawOldCross(intensity, centre, extent); return }
+              val half = (extent * 0.9f).toInt()
+              d.setBounds(centre.x.toInt() - half, centre.y.toInt() - half, centre.x.toInt() + half, centre.y.toInt() + half)
+              d.alpha = (intensity.coerceIn(0f, 1f) * 255).toInt()
+              d.draw(drawContext.canvas.nativeCanvas)
+          }
+
+          private fun DrawScope.drawOldCross(intensity: Float, centre: Offset, extent: Float) {
+          ''')
+          sub('app/src/main/kotlin/app/aether/AetherApp.kt', '        super.onCreate()\n        CrashNote.keep(this)',
+              '        super.onCreate()\n        app.aether.core.designsystem.component.GalaxyMark.install(this, R.drawable.ic_launcher_foreground)\n        CrashNote.keep(this)')
+          # the one test that checks the message text
+          tp = 'core/transfer/src/test/kotlin/app/aether/core/transfer/LibraryFilesTest.kt'
+          if os.path.exists(tp):
+              t = open(tp, encoding='utf-8').read().replace('contains("newer AETHER")', 'contains("newer Galaxy")')
+              open(tp, 'w', encoding='utf-8').write(t)
+          W2 = 'core/designsystem/src/main/kotlin/app/aether/core/designsystem/component/Wordmark.kt'
+          sub(W2, 'import androidx.compose.ui.graphics.drawscope.rotate\n', 'import androidx.compose.ui.graphics.drawscope.rotate\nimport androidx.compose.ui.graphics.nativeCanvas\n')
+          print('done')
+
+          PY
+          fi
           git config user.name 'Galaxy build'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add -A
-          git diff --cached --quiet || git commit -m 'Publish complete Galaxy source with upstream GPL notices'
+          git diff --cached --quiet || git commit -m 'Galaxy branding: replace remaining AETHER names and the splash icon'
           git push
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -58,4 +126,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create galaxy-test-${{ github.run_number }} Galaxy-3.0.0-test.apk Galaxy-source-3.0.0.zip SHA256SUMS.txt --title 'Galaxy 3.0.0 test candidate' --prerelease --notes 'Space-themed AETHER derivative, GPL-3.0. Original AETHER by GHOSTxASR / Ashmit Roy. Android 10+. Separate installation package app.galaxy.music.debug. Build and APK signature checked; live phone UI, playback and performance have not been verified. The galaxy is an artistic depth-rendered visualization with restrained rotation and twinkling stars, not an astronomy photograph or interactive 3D model. This is a debug-signed test build. Review BUILDING-GALAXY.md before using or rebuilding.'
+          gh release create galaxy-test-${{ github.run_number }} Galaxy-3.0.0-test.apk Galaxy-source-3.0.0.zip SHA256SUMS.txt --title 'Galaxy 3.0.1 test candidate' --prerelease --notes 'Branding sweep: Galaxy name everywhere in the app UI and the Galaxy icon in the start animation. Space-themed AETHER derivative, GPL-3.0. Original AETHER by GHOSTxASR / Ashmit Roy. Android 10+. Separate installation package app.galaxy.music.debug. Build and APK signature checked; live phone UI, playback and performance have not been verified. The galaxy is an artistic depth-rendered visualization with restrained rotation and twinkling stars, not an astronomy photograph or interactive 3D model. This is a debug-signed test build. Review BUILDING-GALAXY.md before using or rebuilding.'
