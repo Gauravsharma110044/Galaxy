@@ -16,6 +16,7 @@ import app.aether.core.data.SourceManager
 import app.aether.core.data.db.AetherDatabase
 import app.aether.core.model.MediaId
 import app.aether.core.model.Outcome
+import app.aether.core.model.PlaybackStatus
 import app.aether.core.model.PlayRecorder
 import app.aether.core.model.QueueStore
 import app.aether.core.model.Stream
@@ -120,7 +121,7 @@ class Container(app: Application) {
                 val t = s.queue.getOrNull(s.index)
                 NowPlayingBridge.publish(
                     app, t?.title ?: "", t?.artistLine ?: "",
-                    s.status == app.aether.core.model.PlaybackStatus.PLAYING,
+                    s.status == PlaybackStatus.PLAYING,
                 )
             }
         }
