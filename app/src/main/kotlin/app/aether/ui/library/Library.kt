@@ -145,7 +145,7 @@ fun LibraryScreen() {
                 // name, the keeper's crossed keys.
                 Column(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBarsIgnoringVisibility), horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(Modifier.height(64.dp))
-                    Image(painterResource(R.drawable.emblem_keys), contentDescription = null, modifier = Modifier.height(46.dp))
+                    app.aether.core.designsystem.component.LightCross(size = 60.dp)
                     Spacer(Modifier.height(14.dp))
                     Txt("Library", Type.Monument)
                     Spacer(Modifier.height(26.dp))
