@@ -129,6 +129,12 @@ fun TrackMenu(track: Track, close: () -> Unit, inPlayer: Boolean = false) {
             if (inPlayer) {
                 Head("Listening")
                 Entry(Glyph.Sleep, "Sleep timer", value = sleepTimerStatus()) { sleep = SleepPage.Picker }
+                val speed by container.settings.playbackSpeed.collectAsStateWithLifecycle()
+                Entry(Glyph.Forward, "Playback speed", value = app.aether.ui.settings.speedLabel(speed)) {
+                    val speeds = app.aether.ui.settings.PlaybackSpeeds
+                    val at = speeds.indexOfFirst { kotlin.math.abs(it - speed) < 0.001f }
+                    container.settings.setPlaybackSpeed(speeds[(at + 1) % speeds.size])
+                }
             }
         } else {
             Head("Add to playlist")
