@@ -392,6 +392,16 @@ class Settings(context: Context) {
     val sleepFadeSeconds: StateFlow<Int> = _sleepFade.asStateFlow()
     fun setSleepFadeSeconds(seconds: Int) { prefs.edit().putInt(SLEEP_FADE, seconds).apply(); _sleepFade.value = seconds }
 
+    private val _balance = MutableStateFlow(prefs.getFloat(BALANCE, 0f))
+    /** Left-right balance, -1 all left to 1 all right. */
+    val balance: StateFlow<Float> = _balance.asStateFlow()
+    fun setBalance(value: Float) { prefs.edit().putFloat(BALANCE, value).apply(); _balance.value = value }
+
+    private val _mono = flag(MONO, false)
+    /** Both ears hear the left and right channels added together. */
+    val mono: StateFlow<Boolean> = _mono.asStateFlow()
+    fun setMono(on: Boolean) = set(MONO, on, _mono)
+
     private val _skipSilence = flag(SKIP_SILENCE, false)
     /** Skip the silent stretches inside a song. */
     val skipSilence: StateFlow<Boolean> = _skipSilence.asStateFlow()
@@ -475,6 +485,8 @@ class Settings(context: Context) {
         const val PLAYBACK_SPEED = "playback_speed"
         const val SKIP_SILENCE = "skip_silence"
         const val SLEEP_FADE = "sleep_fade_seconds"
+        const val BALANCE = "balance"
+        const val MONO = "mono"
         const val AUTOMIX = "automix"
         const val SONG_ORDERS = "song_orders"
         const val FULL_SCREEN = "full_screen"
