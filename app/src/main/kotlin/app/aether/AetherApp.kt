@@ -144,7 +144,10 @@ class Container(app: Application) {
                 cover
             }
         },
-    ).also { it.start() }
+    ).also { d ->
+        d.start()
+        scope.launch { settings.privateDownloads.collect { on -> d.setAppPrivate(on) } }
+    }
 
     /** Lyrics already on the phone: a song's .lrc, the words in its file, a kept song's own. */
     val localLyrics = LocalLyrics(app, local, settings) { id -> downloads.keptFile(id) }
