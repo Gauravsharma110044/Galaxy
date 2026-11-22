@@ -402,6 +402,16 @@ class Settings(context: Context) {
     val preampDb: StateFlow<Float> = _preamp.asStateFlow()
     fun setPreampDb(value: Float) { prefs.edit().putFloat(PREAMP, value).apply(); _preamp.value = value }
 
+    private val _galaxyAccent = MutableStateFlow(prefs.getInt(GALAXY_ACCENT, 0))
+    /** The colour of Galaxy's sky: an index into the accent list (0 is plain white). */
+    val galaxyAccent: StateFlow<Int> = _galaxyAccent.asStateFlow()
+    fun setGalaxyAccent(value: Int) { prefs.edit().putInt(GALAXY_ACCENT, value).apply(); _galaxyAccent.value = value }
+
+    private val _galaxy3d = MutableStateFlow(prefs.getBoolean(GALAXY_3D, false))
+    /** Whether the home sky draws the galaxy in 3D instead of the picture. */
+    val galaxy3d: StateFlow<Boolean> = _galaxy3d.asStateFlow()
+    fun setGalaxy3d(on: Boolean) { prefs.edit().putBoolean(GALAXY_3D, on).apply(); _galaxy3d.value = on }
+
     private val _privateDownloads = flag(PRIVATE_DOWNLOADS, true)
     /** Kept songs stay inside Galaxy instead of being written to the Music folder. */
     val privateDownloads: StateFlow<Boolean> = _privateDownloads.asStateFlow()
@@ -499,6 +509,8 @@ class Settings(context: Context) {
         const val MONO = "mono"
         const val PRIVATE_DOWNLOADS = "private_downloads"
         const val PREAMP = "preamp_db"
+        const val GALAXY_ACCENT = "galaxy_accent"
+        const val GALAXY_3D = "galaxy_3d"
         const val AUTOMIX = "automix"
         const val SONG_ORDERS = "song_orders"
         const val FULL_SCREEN = "full_screen"
