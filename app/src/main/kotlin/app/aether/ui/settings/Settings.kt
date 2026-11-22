@@ -278,7 +278,7 @@ fun SettingsScreen() {
                 )
                 Choice(
                     title = "Balance",
-                    detail = "Move the sound toward the left or right ear. The middle leaves it as it is.",
+                    detail = "Move the sound toward the left or right ear. The middle leaves it as it is. Applies after you close and reopen Galaxy.",
                     options = Balances.map { it.first },
                     selected = Balances.indexOfFirst { kotlin.math.abs(it.second - balance) < 0.01f }.let { if (it < 0) 2 else it },
                     onSelect = { settings.setBalance(Balances[it].second) },
