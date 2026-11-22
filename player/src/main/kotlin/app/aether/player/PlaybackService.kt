@@ -413,6 +413,9 @@ class PlaybackService : MediaLibraryService() {
      * queue at once). Only the one with the session has the audio focus and hears headphones go.
      */
     private fun buildPeer(ownsSession: Boolean, sources: ChosenSources = ChosenSources(this, env, DefaultMediaSourceFactory(audio))): Peer {
+        StereoOutput.balance = env.balance.value
+        StereoOutput.mono = env.mono.value
+        StereoOutput.preampDb = env.preampDb.value
         val equaliser = EqualiserProcessor().also { it.update(env.equaliser.value) }
         val meter = AudioMeter()
         val filter = TransitionFilterProcessor()
