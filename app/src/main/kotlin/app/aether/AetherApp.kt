@@ -111,6 +111,11 @@ class Container(app: Application) {
     val accountPlaylists by lazy { AccountPlaylists(app, scope, account, sources, library, online) }
     val playback = PlaybackConnection(app, scope)
 
+    init {
+        // A song with a sound of its own (Equaliser) gets it the moment it starts.
+        scope.launch { playback.state.collect { s -> equaliser.currentSong.value = s.queue.getOrNull(s.index)?.id?.value } }
+    }
+
     /**
      * Songs kept on the phone to play offline, each a file in the listener's Music folder with its
      * words and cover in its tags (the words only when timed lyrics are on, the cover as the source has it).
@@ -333,6 +338,8 @@ class AetherApp : Application(), PlaybackEnvironment, SingletonImageLoader.Facto
     override val playbackSpeed: StateFlow<Float> get() = container.settings.playbackSpeed
     override val skipSilence: StateFlow<Boolean> get() = container.settings.skipSilence
     override val sleepFadeSeconds: StateFlow<Int> get() = container.settings.sleepFadeSeconds
+    override val balance: StateFlow<Float> get() = container.settings.balance
+    override val mono: StateFlow<Boolean> get() = container.settings.mono
     override val automix: StateFlow<Boolean> get() = container.settings.automix
     override suspend fun suggestionsAfter(track: Track): List<Track> {
         val source = container.sources.of(track.id) ?: return emptyList()
