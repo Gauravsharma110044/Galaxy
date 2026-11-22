@@ -114,6 +114,16 @@ class Container(app: Application) {
     init {
         // A song with a sound of its own (Equaliser) gets it the moment it starts.
         scope.launch { playback.state.collect { s -> equaliser.currentSong.value = s.queue.getOrNull(s.index)?.id?.value } }
+        // The widget and the quick-settings tile show the same song (NowPlayingBridge).
+        scope.launch {
+            playback.state.collect { s ->
+                val t = s.queue.getOrNull(s.index)
+                NowPlayingBridge.publish(
+                    app, t?.title ?: "", t?.artistLine ?: "",
+                    s.status == app.aether.core.model.PlaybackStatus.PLAYING,
+                )
+            }
+        }
     }
 
     /**
