@@ -111,6 +111,7 @@ fun SettingsScreen() {
     val sleepFade by settings.sleepFadeSeconds.collectAsStateWithLifecycle()
     val balance by settings.balance.collectAsStateWithLifecycle()
     val mono by settings.mono.collectAsStateWithLifecycle()
+    val preamp by settings.preampDb.collectAsStateWithLifecycle()
     val automix by settings.automix.collectAsStateWithLifecycle()
     val fullScreen by settings.fullScreen.collectAsStateWithLifecycle()
     val songVideo by settings.songVideo.collectAsStateWithLifecycle()
@@ -249,6 +250,13 @@ fun SettingsScreen() {
                     options = PlaybackSpeeds.map { speedLabel(it) },
                     selected = PlaybackSpeeds.indexOfFirst { kotlin.math.abs(it - playbackSpeed) < 0.001f }.coerceAtLeast(0),
                     onSelect = { settings.setPlaybackSpeed(PlaybackSpeeds[it]) },
+                )
+                Choice(
+                    title = "Volume boost",
+                    detail = "A gain on everything you play, in decibels. Boosts are kept from clipping by a soft limit, but a big one can still sound harder. Off is as recorded.",
+                    options = Preamps.map { if (it == 0f) "Off" else (if (it > 0f) "+" else "") + it.toInt() + " dB" },
+                    selected = Preamps.indexOfFirst { kotlin.math.abs(it - preamp) < 0.01f }.coerceAtLeast(0),
+                    onSelect = { settings.setPreampDb(Preamps[it]) },
                 )
                 Choice(
                     title = "Balance",
@@ -617,6 +625,9 @@ private fun Toggle(title: String, detail: String, on: Boolean, onToggle: () -> U
 }
 
 /** One of a few: the words, then the choices on one bar of glass, the chosen one under the lit drop. */
+/** Volume boost choices, in decibels; 0 is off. */
+val Preamps = listOf(0f, -6f, -3f, 3f, 6f)
+
 /** Balance choices: the label and the position, -1 left to 1 right. */
 val Balances = listOf("Left" to -1f, "Left a little" to -0.5f, "Middle" to 0f, "Right a little" to 0.5f, "Right" to 1f)
 
