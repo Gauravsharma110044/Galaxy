@@ -271,7 +271,7 @@ fun SettingsScreen() {
                 )
                 Choice(
                     title = "Volume boost",
-                    detail = "A gain on everything you play, in decibels. Boosts are kept from clipping by a soft limit, but a big one can still sound harder. Off is as recorded.",
+                    detail = "A gain on everything you play, in decibels. Boosts are kept from clipping by a soft limit, but a big one can still sound harder. Off is as recorded. Applies after you close and reopen Galaxy.",
                     options = Preamps.map { if (it == 0f) "Off" else (if (it > 0f) "+" else "") + it.toInt() + " dB" },
                     selected = Preamps.indexOfFirst { kotlin.math.abs(it - preamp) < 0.01f }.coerceAtLeast(0),
                     onSelect = { settings.setPreampDb(Preamps[it]) },
