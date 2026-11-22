@@ -129,6 +129,24 @@ fun TrackMenu(track: Track, close: () -> Unit, inPlayer: Boolean = false) {
             if (inPlayer) {
                 Head("Listening")
                 Entry(Glyph.Sleep, "Sleep timer", value = sleepTimerStatus()) { sleep = SleepPage.Picker }
+                val abA by app.aether.player.AbRepeat.a.collectAsStateWithLifecycle()
+                val abB by app.aether.player.AbRepeat.b.collectAsStateWithLifecycle()
+                Entry(
+                    Glyph.Repeat,
+                    "A-B repeat",
+                    value = when {
+                        abA == null -> "Set A"
+                        abB == null -> "A ${abClock(abA!!)}  ·  Set B"
+                        else -> "${abClock(abA!!)} to ${abClock(abB!!)}  ·  Clear"
+                    },
+                ) {
+                    val now = container.playback.positionNow()
+                    when {
+                        abA == null -> app.aether.player.AbRepeat.a.value = now
+                        abB == null -> if (now > abA!! + 1000) app.aether.player.AbRepeat.b.value = now
+                        else -> app.aether.player.AbRepeat.clear()
+                    }
+                }
                 val speed by container.settings.playbackSpeed.collectAsStateWithLifecycle()
                 Entry(Glyph.Forward, "Playback speed", value = app.aether.ui.settings.speedLabel(speed)) {
                     val speeds = app.aether.ui.settings.PlaybackSpeeds
@@ -184,6 +202,8 @@ private fun NewPlaylistLine(fallback: String, onDone: (String) -> Unit) {
     }
     Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ink.White.copy(alpha = 0.6f)))
 }
+
+private fun abClock(ms: Long): String = "%d:%02d".format(ms / 60000, ms / 1000 % 60)
 
 /** A group's name in small spaced capitals, over a hairline: no boxes, the type carries it. */
 @Composable
