@@ -397,6 +397,11 @@ class Settings(context: Context) {
     val balance: StateFlow<Float> = _balance.asStateFlow()
     fun setBalance(value: Float) { prefs.edit().putFloat(BALANCE, value).apply(); _balance.value = value }
 
+    private val _preamp = MutableStateFlow(prefs.getFloat(PREAMP, 0f))
+    /** A gain on everything, in decibels. */
+    val preampDb: StateFlow<Float> = _preamp.asStateFlow()
+    fun setPreampDb(value: Float) { prefs.edit().putFloat(PREAMP, value).apply(); _preamp.value = value }
+
     private val _mono = flag(MONO, false)
     /** Both ears hear the left and right channels added together. */
     val mono: StateFlow<Boolean> = _mono.asStateFlow()
@@ -487,6 +492,7 @@ class Settings(context: Context) {
         const val SLEEP_FADE = "sleep_fade_seconds"
         const val BALANCE = "balance"
         const val MONO = "mono"
+        const val PREAMP = "preamp_db"
         const val AUTOMIX = "automix"
         const val SONG_ORDERS = "song_orders"
         const val FULL_SCREEN = "full_screen"
