@@ -157,6 +157,46 @@ class Downloads(
     private val couldNot = java.util.Collections.synchronizedSet(HashSet<MediaId>())
     private var exporter: Job? = null
 
+    /**
+     * Whether kept songs stay in the app's own store (the default) instead of being written out as
+     * files in the Music folder. In the store they play offline as ever but the phone's file manager
+     * doesn't list them, and uninstalling the app removes them.
+     */
+    @Volatile private var appPrivate = true
+
+    fun setAppPrivate(on: Boolean) {
+        appPrivate = on
+        if (!on) refresh()
+    }
+
+    /** How many songs the move into the app (below) has still to do; 0 when it is idle. */
+    val movedLeft = MutableStateFlow(0)
+
+    /**
+     * Songs kept earlier as files in the Music folder are fetched again into the app's store, and each
+     * file is deleted only once its copy in the store is whole. A song that can't be fetched keeps its file.
+     */
+    fun moveIntoApp() {
+        if (!appPrivate || movedLeft.value > 0) return
+        scope.launch {
+            val todo = files.entries.value.values.map { it.track }
+            movedLeft.value = todo.size
+            for (track in todo) {
+                val request = DownloadRequest.Builder(track.id.value, trackUri(track.id)).setCustomCacheKey("track:${track.id.value}").setData(track.toBytes()).build()
+                DownloadService.sendAddDownload(context, KeepService::class.java, request, false)
+                var waited = 0
+                while (isActive && waited < 600) {
+                    val status = downloading[track.id]?.status
+                    if (status == Status.Kept || status == Status.Failed) break
+                    delay(1000)
+                    waited++
+                }
+                if (downloading[track.id]?.status == Status.Kept) files.forget(track.id)
+                movedLeft.value = movedLeft.value - 1
+            }
+        }
+    }
+
     /** Where [id]'s file is in the Music folder, when it's been kept there. */
     fun keptFile(id: MediaId): android.net.Uri? = files.uriOf(id)
 
@@ -241,6 +281,7 @@ class Downloads(
      * store, kept and playing, and isn't tried again this session.
      */
     private fun exportWhole() {
+        if (appPrivate) return
         if (exporter?.isActive == true) return
         exporter = scope.launch {
             while (isActive) {
