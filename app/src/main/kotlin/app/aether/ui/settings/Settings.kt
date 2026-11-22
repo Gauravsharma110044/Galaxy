@@ -109,6 +109,8 @@ fun SettingsScreen() {
     val playbackSpeed by settings.playbackSpeed.collectAsStateWithLifecycle()
     val skipSilence by settings.skipSilence.collectAsStateWithLifecycle()
     val sleepFade by settings.sleepFadeSeconds.collectAsStateWithLifecycle()
+    val balance by settings.balance.collectAsStateWithLifecycle()
+    val mono by settings.mono.collectAsStateWithLifecycle()
     val automix by settings.automix.collectAsStateWithLifecycle()
     val fullScreen by settings.fullScreen.collectAsStateWithLifecycle()
     val songVideo by settings.songVideo.collectAsStateWithLifecycle()
@@ -248,6 +250,14 @@ fun SettingsScreen() {
                     selected = PlaybackSpeeds.indexOfFirst { kotlin.math.abs(it - playbackSpeed) < 0.001f }.coerceAtLeast(0),
                     onSelect = { settings.setPlaybackSpeed(PlaybackSpeeds[it]) },
                 )
+                Choice(
+                    title = "Balance",
+                    detail = "Move the sound toward the left or right ear. The middle leaves it as it is.",
+                    options = Balances.map { it.first },
+                    selected = Balances.indexOfFirst { kotlin.math.abs(it.second - balance) < 0.01f }.let { if (it < 0) 2 else it },
+                    onSelect = { settings.setBalance(Balances[it].second) },
+                )
+                Toggle("Mono", "Both ears hear the left and right channels added together, for one earbud or a single speaker.", mono) { settings.setMono(!mono) }
                 Choice(
                     title = "Sleep timer fade-out",
                     detail = "How long the music takes to fade to nothing before the sleep timer stops it. Off stops it as before (or fades over the crossfade's length when sleeping after a song).",
@@ -607,6 +617,9 @@ private fun Toggle(title: String, detail: String, on: Boolean, onToggle: () -> U
 }
 
 /** One of a few: the words, then the choices on one bar of glass, the chosen one under the lit drop. */
+/** Balance choices: the label and the position, -1 left to 1 right. */
+val Balances = listOf("Left" to -1f, "Left a little" to -0.5f, "Middle" to 0f, "Right a little" to 0.5f, "Right" to 1f)
+
 /** Sleep timer fade lengths in seconds; 0 is off. */
 val SleepFades = listOf(0, 5, 15, 30, 60)
 
