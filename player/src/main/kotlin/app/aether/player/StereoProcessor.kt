@@ -6,8 +6,10 @@ import androidx.media3.common.audio.BaseAudioProcessor
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.tanh
 
-/** The listener's balance and mono choice, read by every player's [StereoProcessor]. */
+/** The listener's balance, mono and preamp choices, read by every player's [StereoProcessor]. */
 internal object StereoOutput {
     /** -1 is all left, 0 centre, 1 all right. */
     @Volatile var balance = 0f
@@ -15,23 +17,35 @@ internal object StereoOutput {
     /** Both ears hear the left and right added together. */
     @Volatile var mono = false
 
+    /** A gain applied to everything, in decibels. */
+    @Volatile var preampDb = 0f
+
     /** Whether the sound is being changed at all. */
-    val active: Boolean get() = mono || abs(balance) > 0.001f
+    val active: Boolean get() = mono || abs(balance) > 0.001f || abs(preampDb) > 0.05f
 }
 
 /**
- * Balance and mono for two-channel sound, in the decoded audio. With both at their defaults every
- * byte passes through as it came, so a bit-perfect route is not disturbed (the service treats an
- * active balance or mono as shaping, as it does the equaliser).
+ * Balance, mono and a preamp, in the decoded audio. Balance and mono apply to two-channel sound;
+ * the preamp to any. With everything at its default every byte passes through as it came, so a
+ * bit-perfect route is not disturbed (the service treats any of them being on as shaping, as it
+ * does the equaliser). A boost is kept from clipping by a soft knee above 80 percent of full scale.
  */
 internal class StereoProcessor : BaseAudioProcessor() {
     private var encoding = C.ENCODING_INVALID
+    private var channels = 0
 
     override fun onConfigure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
-        if (inputAudioFormat.channelCount != 2) return AudioProcessor.AudioFormat.NOT_SET
         if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT && inputAudioFormat.encoding != C.ENCODING_PCM_FLOAT) return AudioProcessor.AudioFormat.NOT_SET
         encoding = inputAudioFormat.encoding
+        channels = inputAudioFormat.channelCount
         return inputAudioFormat
+    }
+
+    private fun soft(x: Float): Float {
+        val a = abs(x)
+        if (a <= KNEE) return x
+        val y = KNEE + (1f - KNEE) * tanh((a - KNEE) / (1f - KNEE))
+        return if (x < 0f) -y else y
     }
 
     override fun queueInput(inputBuffer: ByteBuffer) {
@@ -43,36 +57,49 @@ internal class StereoProcessor : BaseAudioProcessor() {
             out.flip()
             return
         }
-        val mono = StereoOutput.mono
+        val stereo = channels == 2
+        val mono = stereo && StereoOutput.mono
         val balance = StereoOutput.balance.coerceIn(-1f, 1f)
-        val leftGain = if (balance > 0f) 1f - balance else 1f
-        val rightGain = if (balance < 0f) 1f + balance else 1f
+        val leftGain = if (stereo && balance > 0f) 1f - balance else 1f
+        val rightGain = if (stereo && balance < 0f) 1f + balance else 1f
+        val gain = 10f.pow(StereoOutput.preampDb / 20f)
         val input = inputBuffer.order(ByteOrder.nativeOrder())
         val short = encoding == C.ENCODING_PCM_16BIT
-        val frame = if (short) 4 else 8
+        val frame = (if (short) 2 else 4) * channels
         while (input.remaining() >= frame) {
-            var l = if (short) input.getShort() / 32768f else input.getFloat()
-            var r = if (short) input.getShort() / 32768f else input.getFloat()
-            if (mono) {
-                val m = (l + r) * 0.5f
-                l = m
-                r = m
-            }
-            l *= leftGain
-            r *= rightGain
-            if (short) {
-                out.putShort((l * 32767f).coerceIn(-32768f, 32767f).toInt().toShort())
-                out.putShort((r * 32767f).coerceIn(-32768f, 32767f).toInt().toShort())
+            if (stereo) {
+                var l = if (short) input.getShort() / 32768f else input.getFloat()
+                var r = if (short) input.getShort() / 32768f else input.getFloat()
+                if (mono) {
+                    val m = (l + r) * 0.5f
+                    l = m
+                    r = m
+                }
+                l = soft(l * leftGain * gain)
+                r = soft(r * rightGain * gain)
+                put(out, l, short)
+                put(out, r, short)
             } else {
-                out.putFloat(l.coerceIn(-1f, 1f))
-                out.putFloat(r.coerceIn(-1f, 1f))
+                for (c in 0 until channels) {
+                    val x = if (short) input.getShort() / 32768f else input.getFloat()
+                    put(out, soft(x * gain), short)
+                }
             }
         }
         while (input.hasRemaining()) out.put(input.get())
         out.flip()
     }
 
+    private fun put(out: ByteBuffer, v: Float, short: Boolean) {
+        if (short) out.putShort((v * 32767f).coerceIn(-32768f, 32767f).toInt().toShort()) else out.putFloat(v.coerceIn(-1f, 1f))
+    }
+
     override fun onReset() {
         encoding = C.ENCODING_INVALID
+        channels = 0
+    }
+
+    private companion object {
+        const val KNEE = 0.8f
     }
 }
