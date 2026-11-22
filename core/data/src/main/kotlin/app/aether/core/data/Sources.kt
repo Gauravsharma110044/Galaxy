@@ -382,6 +382,16 @@ class Settings(context: Context) {
     val crossfade: StateFlow<Int> = _crossfade.asStateFlow()
     fun setCrossfade(seconds: Int) { prefs.edit().putInt(CROSSFADE, seconds).apply(); _crossfade.value = seconds }
 
+    private val _playbackSpeed = MutableStateFlow(prefs.getFloat(PLAYBACK_SPEED, 1f))
+    /** How fast songs play, 1 being as recorded. Remembered between launches. */
+    val playbackSpeed: StateFlow<Float> = _playbackSpeed.asStateFlow()
+    fun setPlaybackSpeed(speed: Float) { prefs.edit().putFloat(PLAYBACK_SPEED, speed).apply(); _playbackSpeed.value = speed }
+
+    private val _skipSilence = flag(SKIP_SILENCE, false)
+    /** Skip the silent stretches inside a song. */
+    val skipSilence: StateFlow<Boolean> = _skipSilence.asStateFlow()
+    fun setSkipSilence(on: Boolean) = set(SKIP_SILENCE, on, _skipSilence)
+
     private val _automix = flag(AUTOMIX, false)
     /**
      * Automix (BitChord's): each song measured (tempo, beats, phrases, key, voices) and run into the
@@ -457,6 +467,8 @@ class Settings(context: Context) {
         const val KEPT_COLLECTIONS = "kept_collections"
         const val CHARTS_COUNTRY = "charts_country"
         const val CROSSFADE = "crossfade"
+        const val PLAYBACK_SPEED = "playback_speed"
+        const val SKIP_SILENCE = "skip_silence"
         const val AUTOMIX = "automix"
         const val SONG_ORDERS = "song_orders"
         const val FULL_SCREEN = "full_screen"
