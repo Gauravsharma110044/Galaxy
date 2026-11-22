@@ -148,13 +148,13 @@ class CastStage(private val context: Context, private val container: Container) 
             session.setMessageReceivedCallbacks(Namespace) { _, _, message ->
                 if (message.contains("\"hello\"")) last?.let { send(it) }
             }
-        }.onFailure { Log.w("AETHER cast", "couldn't listen to the TV", it) }
+        }.onFailure { Log.w("Galaxy cast", "couldn't listen to the TV", it) }
     }
 
     private fun send(stage: JSONObject) {
         last = stage
         val session = CastController.session() ?: return
-        runCatching { session.sendMessage(Namespace, stage.toString()) }.onFailure { Log.w("AETHER cast", "couldn't reach the TV's stage", it) }
+        runCatching { session.sendMessage(Namespace, stage.toString()) }.onFailure { Log.w("Galaxy cast", "couldn't reach the TV's stage", it) }
     }
 
     private companion object {

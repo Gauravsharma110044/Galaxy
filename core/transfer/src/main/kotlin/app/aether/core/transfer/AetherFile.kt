@@ -53,10 +53,10 @@ object AetherFile {
 
     fun read(text: String): ImportRead {
         val file = runCatching { json.decodeFromString(FileDto.serializer(), text) }.getOrNull()
-            ?: return ImportRead.Failed("This doesn't read as an AETHER file.")
+            ?: return ImportRead.Failed("This doesn't read as an Galaxy file.")
         if (file.app != APP || file.kind != KIND) return ImportRead.Failed("This file is from another app.")
-        if (file.version > VERSION) return ImportRead.Failed("A newer AETHER wrote this file. Update AETHER, then import it.")
-        if (file.playlists.sumOf { it.songs.size } + (file.liked?.size ?: 0) > MAX_SONGS) return ImportRead.Failed("This file is larger than AETHER reads.")
+        if (file.version > VERSION) return ImportRead.Failed("A newer Galaxy wrote this file. Update Galaxy, then import it.")
+        if (file.playlists.sumOf { it.songs.size } + (file.liked?.size ?: 0) > MAX_SONGS) return ImportRead.Failed("This file is larger than Galaxy reads.")
         val playlists = file.playlists.mapNotNull { p ->
             val uuid = Text.clean(p.uuid, 100) ?: return@mapNotNull null
             ImportedPlaylist(

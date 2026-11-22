@@ -159,7 +159,7 @@ internal class AutomixAudio(
         const val RETRY_AFTER_MS = 60_000L
         const val MAX_RATE_HZ = 48_000
         const val MAX_BYTES = 120L * 1024 * 1024
-        const val TAG = "AetherAutomix"
+        const val TAG = "GalaxyAutomix"
     }
 }
 
@@ -203,7 +203,7 @@ internal class CacheMediaDataSource(
             }
         } catch (e: IOException) {
             // A piece gone from the cache: what was read stands, and the decoder stops short there.
-            Log.w("AetherAutomix", "cache read of $key at $position stopped: ${e.message}")
+            Log.w("GalaxyAutomix", "cache read of $key at $position stopped: ${e.message}")
         } finally {
             runCatching { source.close() }
         }

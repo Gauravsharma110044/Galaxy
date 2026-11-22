@@ -514,6 +514,6 @@ internal class Crossfader(
         const val CARRY_FADE_MS = 400L
         const val ALIGN_MAX_TRIES = 4
         const val ALIGN_RETRY_MS = 300L
-        const val TAG = "AetherCrossfade"
+        const val TAG = "GalaxyCrossfade"
     }
 }

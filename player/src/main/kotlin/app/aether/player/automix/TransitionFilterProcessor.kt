@@ -609,7 +609,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         /** A flush this close to where the last audio ended is the same stream carrying on. */
         private const val CONTIGUOUS_US = 50_000L
 
-        private const val TAG = "AetherTransitionFilter"
+        private const val TAG = "GalaxyTransitionFilter"
 
         /** A low-pass at or above this is doing nothing audible, so it counts as off. */
         const val OPEN_HZ = 20_000f

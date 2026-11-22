@@ -55,7 +55,7 @@ data class ImportedLibrary(
 )
 
 enum class ImportFormat(val label: String) {
-    AETHER("an AETHER file"),
+    AETHER("an Galaxy file"),
     M3U("an M3U playlist"),
     CSV("a CSV file"),
     TEXT("a list of songs"),

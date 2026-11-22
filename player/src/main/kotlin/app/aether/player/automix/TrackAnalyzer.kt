@@ -920,7 +920,7 @@ class TrackAnalyzer(
     }
 
     private companion object {
-        const val TAG = "AetherTrackAnalyzer"
+        const val TAG = "GalaxyTrackAnalyzer"
 
         /**
          * What an unmeasured instant reads as. Below the policy's VOCAL_ACTIVE_THRESHOLD by

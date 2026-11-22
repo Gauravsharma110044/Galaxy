@@ -118,7 +118,7 @@ class UpdateInstallReceiver : BroadcastReceiver() {
             PackageInstaller.STATUS_SUCCESS -> updates?.installFinished(InstallOutcome.DONE, null)
             PackageInstaller.STATUS_FAILURE_ABORTED -> updates?.installFinished(InstallOutcome.CANCELLED, null)
             else -> {
-                Log.w("AetherUpdate", "install failed: status $status")
+                Log.w("GalaxyUpdate", "install failed: status $status")
                 updates?.installFinished(InstallOutcome.FAILED, intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE))
             }
         }

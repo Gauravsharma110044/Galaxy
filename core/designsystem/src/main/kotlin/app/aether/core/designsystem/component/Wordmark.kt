@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,7 +32,26 @@ fun LightCross(modifier: Modifier = Modifier, size: Dp = 120.dp, intensity: Floa
     Canvas(modifier.size(size)) { drawLightCross(intensity) }
 }
 
+/** The Galaxy launcher artwork, installed once by the app from its own resources. */
+object GalaxyMark {
+    @Volatile private var mark: android.graphics.drawable.Drawable? = null
+    fun install(context: android.content.Context, resId: Int) {
+        mark = androidx.core.content.ContextCompat.getDrawable(context, resId)?.mutate()
+    }
+    internal fun drawable() = mark
+}
+
+/** The Galaxy mark (the launcher icon's spiral galaxy), centred on [centre]; [extent] is the old cross's size. */
 fun DrawScope.drawLightCross(intensity: Float = 1f, centre: Offset = center, extent: Float = size.minDimension) {
+    val d = GalaxyMark.drawable()
+    if (d == null) { drawOldCross(intensity, centre, extent); return }
+    val half = (extent * 0.9f).toInt()
+    d.setBounds(centre.x.toInt() - half, centre.y.toInt() - half, centre.x.toInt() + half, centre.y.toInt() + half)
+    d.alpha = (intensity.coerceIn(0f, 1f) * 255).toInt()
+    d.draw(drawContext.canvas.nativeCanvas)
+}
+
+private fun DrawScope.drawOldCross(intensity: Float, centre: Offset, extent: Float) {
     val i = intensity.coerceIn(0f, 1.5f)
     val s = extent
     val white = Color.White
@@ -66,11 +86,11 @@ fun DrawScope.drawLightCross(intensity: Float = 1f, centre: Offset = center, ext
 
 /** Aether, signed in the script, over the cross of light, with the year below. */
 @Composable
-fun Wordmark(modifier: Modifier = Modifier, crossSize: Dp = 132.dp, showYear: Boolean = true, aside: String? = "A Music Sanctuary") {
+fun Wordmark(modifier: Modifier = Modifier, crossSize: Dp = 132.dp, showYear: Boolean = true, aside: String? = "Music among the stars") {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         LightCross(size = crossSize)
         Spacer(Modifier.height(20.dp))
-        Txt("Aether", Type.Inscription)
+        Txt("Galaxy", Type.Inscription)
         if (aside != null) {
             Spacer(Modifier.height(6.dp))
             Txt(aside, Type.Aside, color = Ink.Grey)

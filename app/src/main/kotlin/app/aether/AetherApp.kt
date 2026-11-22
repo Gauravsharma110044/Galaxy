@@ -285,6 +285,7 @@ class AetherApp : Application(), PlaybackEnvironment, SingletonImageLoader.Facto
 
     override fun onCreate() {
         super.onCreate()
+        app.aether.core.designsystem.component.GalaxyMark.install(this, R.drawable.ic_launcher_foreground)
         CrashNote.keep(this)
         container = Container(this)
         keepCoversOffline()

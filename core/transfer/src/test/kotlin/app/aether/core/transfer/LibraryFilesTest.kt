@@ -97,7 +97,7 @@ class LibraryFilesTest {
 
     @Test fun `a newer AETHER's file, or another app's, is refused whole`() {
         val newer = AetherFile.write(emptyList(), null, "9", "now").replace("\"version\": 1", "\"version\": 99")
-        assertTrue((Imports.read(newer.byteInputStream(), "a.json", temp()) as ImportRead.Failed).reason.contains("newer AETHER"))
+        assertTrue((Imports.read(newer.byteInputStream(), "a.json", temp()) as ImportRead.Failed).reason.contains("newer Galaxy"))
         assertIs<ImportRead.Failed>(Imports.read("""{"app":"other","kind":"playlists"}""".byteInputStream(), "b.json", temp()))
     }
 

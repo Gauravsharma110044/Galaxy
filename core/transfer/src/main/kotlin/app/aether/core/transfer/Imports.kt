@@ -40,7 +40,7 @@ object Imports {
         }
         val bytes = readCapped(stream, MAX_TEXT_BYTES) ?: return ImportRead.Failed("This file is larger than any playlist.")
         if (bytes.isEmpty()) return ImportRead.Failed("This file is empty.")
-        if (looksBinary(bytes)) return ImportRead.Failed("AETHER can't read this kind of file. It reads its own, M3U, CSV, text lists and Spotify's data download.")
+        if (looksBinary(bytes)) return ImportRead.Failed("Galaxy can't read this kind of file. It reads its own, M3U, CSV, text lists and Spotify's data download.")
         readText(Text.decode(bytes), fileName)
     }.getOrElse { ImportRead.Failed("This file couldn't be read.") }
 
@@ -52,7 +52,7 @@ object Imports {
             SpotifyData.looksLike(text) -> SpotifyData.readJson(text)
             M3u.looksLike(text, fileName) -> M3u.read(text, fileName)
             start.startsWith("{") || start.startsWith("[") || start.startsWith("<") ->
-                ImportRead.Failed("AETHER doesn't know this kind of file. It reads its own, M3U, CSV, text lists and Spotify's data download.")
+                ImportRead.Failed("Galaxy doesn't know this kind of file. It reads its own, M3U, CSV, text lists and Spotify's data download.")
             else -> Csv.read(text, fileName)
         }
     }

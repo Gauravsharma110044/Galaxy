@@ -65,15 +65,15 @@ fun UpdateSheet(updates: UpdateCenter) {
     ) {
         when (val s = state) {
             UpdateState.Idle, UpdateState.Checking -> {
-                Heading("Software update", "Looking for a newer AETHER", listOf("Asking GitHub for the newest release. Nothing about you goes with it."))
+                Heading("Software update", "Looking for a newer Galaxy", listOf("Asking GitHub for the newest release. Nothing about you goes with it."))
                 Box(Modifier.fillMaxWidth().padding(top = 28.dp), contentAlignment = Alignment.Center) { GridDots() }
             }
             is UpdateState.UpToDate -> {
-                Heading("Software update", "AETHER is up to date", listOf("You have the newest version, ${s.current}."))
+                Heading("Software update", "Galaxy is up to date", listOf("You have the newest version, ${s.current}."))
                 Actions(listOf(Action(Glyph.Check, "Done") { updates.dismiss() }))
             }
             is UpdateState.Offer -> {
-                Heading("A new edition", "AETHER ${s.release.version}", s.highlights.ifEmpty { listOf("A newer version is out.") }, changes = s.highlights.isNotEmpty())
+                Heading("A new edition", "Galaxy ${s.release.version}", s.highlights.ifEmpty { listOf("A newer version is out.") }, changes = s.highlights.isNotEmpty())
                 Actions(
                     listOfNotNull(
                         if (s.canInstall) {
@@ -85,39 +85,39 @@ fun UpdateSheet(updates: UpdateCenter) {
                     ),
                 )
                 if (!s.canInstall && s.release.apk != null) {
-                    Note("This copy of AETHER is a test build, so the release installs from its page on GitHub.")
+                    Note("This copy of Galaxy is a test build, so the release installs from its page on GitHub.")
                 }
             }
             is UpdateState.Downloading -> {
                 val progress = s.total?.let { (s.done.toFloat() / it).coerceIn(0f, 1f) } ?: 0f
                 Heading(
                     "Downloading",
-                    "AETHER ${s.release.version}",
-                    listOf(s.total?.let { "${megabytes(s.done)} of ${megabytes(it)}" } ?: megabytes(s.done), "Keep listening: pull this away, and AETHER asks again when it's ready."),
+                    "Galaxy ${s.release.version}",
+                    listOf(s.total?.let { "${megabytes(s.done)} of ${megabytes(it)}" } ?: megabytes(s.done), "Keep listening: pull this away, and Galaxy asks again when it's ready."),
                 )
                 Filling(progress)
                 Actions(listOf(Action(Glyph.Close, "Stop") { updates.cancel() }))
             }
             is UpdateState.Verifying -> {
-                Heading("Checking the download", "AETHER ${s.release.version}", listOf("Making sure it's the release, and signed like your AETHER."))
+                Heading("Checking the download", "Galaxy ${s.release.version}", listOf("Making sure it's the release, and signed like your Galaxy."))
                 Filling(1f)
             }
             is UpdateState.NeedsPermission -> {
-                Heading("One more step", "Allow AETHER to install updates", listOf("Android asks once. Turn on Allow from this source, then come back to AETHER."))
+                Heading("One more step", "Allow Galaxy to install updates", listOf("Android asks once. Turn on Allow from this source, then come back to Galaxy."))
                 Actions(listOf(Action(Glyph.Forward, "Open Android settings") { openSettings(context, updates) }, github(s.release)))
             }
             is UpdateState.Installing -> {
-                Heading("Installing", "AETHER ${s.release.version}", listOf("Android asks you to confirm. AETHER closes while it updates; your library stays as it is."))
+                Heading("Installing", "Galaxy ${s.release.version}", listOf("Android asks you to confirm. Galaxy closes while it updates; your library stays as it is."))
             }
             is UpdateState.Failed -> {
                 val (title, line) = when (s.problem) {
-                    UpdateProblem.NO_CONNECTION -> "Couldn't look for updates" to "AETHER couldn't reach GitHub. Check your connection and try again."
+                    UpdateProblem.NO_CONNECTION -> "Couldn't look for updates" to "Galaxy couldn't reach GitHub. Check your connection and try again."
                     UpdateProblem.RATE_LIMITED -> "Couldn't look for updates" to "GitHub asked for fewer checks from this network. Try again in an hour."
                     UpdateProblem.NOTHING_TO_DOWNLOAD -> "Nothing to download here" to "This release has no app attached. Get it from its page on GitHub."
                     UpdateProblem.DOWNLOAD -> "The download stopped" to "It didn't finish. Check your connection and try again, or get it from GitHub."
                     UpdateProblem.CORRUPT -> "The download doesn't match" to "It isn't the file the release lists, so it wasn't installed. Try again, or get it from GitHub."
-                    UpdateProblem.OTHER_APP -> "This can't replace your AETHER" to "It isn't signed like the AETHER on your phone, so Android won't install it over it. Get it from GitHub instead."
-                    UpdateProblem.NOT_NEWER -> "Nothing newer to install" to "The download isn't newer than your AETHER."
+                    UpdateProblem.OTHER_APP -> "This can't replace your Galaxy" to "It isn't signed like the Galaxy on your phone, so Android won't install it over it. Get it from GitHub instead."
+                    UpdateProblem.NOT_NEWER -> "Nothing newer to install" to "The download isn't newer than your Galaxy."
                     UpdateProblem.INSTALL -> "The update didn't install" to (s.detail?.let { "Android said: ${it.take(120)}. " }.orEmpty() + "Try again, or get it from GitHub.")
                 }
                 Heading("Software update", title, listOf(line))

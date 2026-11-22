@@ -788,7 +788,7 @@ class PlaybackService : MediaLibraryService() {
             val attempts = last?.second ?: 0
             if (attempts >= MaxRecoveries) return
             retried = Triple(item.mediaId, attempts + 1, now)
-            Log.w("AETHER", "playback failed (${error.errorCodeName}); recovering ${item.mediaId}, attempt ${attempts + 1}", error)
+            Log.w("Galaxy", "playback failed (${error.errorCodeName}); recovering ${item.mediaId}, attempt ${attempts + 1}", error)
             env.invalidate(MediaId(item.mediaId))
             val at = player.currentPosition
             player.seekTo(player.currentMediaItemIndex, at)
@@ -812,7 +812,7 @@ class PlaybackService : MediaLibraryService() {
             Futures.immediateFuture(
                 LibraryResult.ofItem(
                     MediaItem.Builder().setMediaId("root").setMediaMetadata(
-                        androidx.media3.common.MediaMetadata.Builder().setIsBrowsable(true).setIsPlayable(false).setTitle("AETHER").build(),
+                        androidx.media3.common.MediaMetadata.Builder().setIsBrowsable(true).setIsPlayable(false).setTitle("Galaxy").build(),
                     ).build(),
                     params,
                 ),

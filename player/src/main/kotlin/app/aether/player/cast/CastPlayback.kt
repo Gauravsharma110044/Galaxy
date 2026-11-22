@@ -605,7 +605,7 @@ class CastPlayback(
         }
 
     companion object {
-        private const val TAG = "AETHER cast"
+        private const val TAG = "Galaxy cast"
         private const val KEY_MEDIA_ID = "mediaId"
 
         /** Songs kept queued on the TV after the playing one. */

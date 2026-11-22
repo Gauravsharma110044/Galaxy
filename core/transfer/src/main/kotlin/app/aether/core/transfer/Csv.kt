@@ -30,7 +30,7 @@ object Csv {
 
     fun read(text: String, fileName: String?): ImportRead {
         val items = items(text.removePrefix(BOM.toString()), fileName)
-        if (items.isEmpty()) return ImportRead.Failed("AETHER found no songs in this file. It reads songs' titles and artists, or YouTube Music links.")
+        if (items.isEmpty()) return ImportRead.Failed("Galaxy found no songs in this file. It reads songs' titles and artists, or YouTube Music links.")
         val name = Files.playlistName(fileName)
         val format = if (fileName?.endsWith(".txt", ignoreCase = true) == true) ImportFormat.TEXT else ImportFormat.CSV
         return ImportRead.Ok(ImportedLibrary(format, listOf(ImportedPlaylist(name, items, origin = Files.origin(name)))))

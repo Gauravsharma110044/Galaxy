@@ -225,7 +225,7 @@ fun MetalCardOverlay(export: CardExport, onSaved: (String) -> Unit) {
         }
         saved = uri
         busy = false
-        onSaved("Saved to Pictures / AETHER")
+        onSaved("Saved to Pictures / Galaxy")
         share(context, uri)
     }
 
@@ -602,7 +602,7 @@ private fun saveToPhone(context: Context, bitmap: Bitmap, name: String) {
     val values = ContentValues().apply {
         put(MediaStore.Images.Media.DISPLAY_NAME, "$name ${LocalDate.now()} ${System.currentTimeMillis() % 100000}.png")
         put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-        put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/AETHER")
+        put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Galaxy")
         put(MediaStore.Images.Media.IS_PENDING, 1)
     }
     val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return

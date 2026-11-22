@@ -282,9 +282,9 @@ class Transfer(
         val scratch = File(app.cacheDir, "import-${System.nanoTime()}.zip")
         return try {
             app.contentResolver.openInputStream(uri)?.use { Imports.read(it, name, scratch) }
-                ?: ImportRead.Failed("AETHER couldn't open that file.")
+                ?: ImportRead.Failed("Galaxy couldn't open that file.")
         } catch (e: Exception) {
-            ImportRead.Failed("AETHER couldn't open that file.")
+            ImportRead.Failed("Galaxy couldn't open that file.")
         } finally {
             scratch.delete()
         }
@@ -299,7 +299,7 @@ class Transfer(
     private suspend fun readLink(text: String): ImportRead {
         var input = text.trim()
         if (SpotifyLink.isShortLink(input)) {
-            val page = fetch(input) as? Page.Ok ?: return ImportRead.Failed("AETHER couldn't reach Spotify.")
+            val page = fetch(input) as? Page.Ok ?: return ImportRead.Failed("Galaxy couldn't reach Spotify.")
             // Followed to the playlist, or to a page that names it inside.
             input = if (SpotifyLink.playlistId(page.at) != null) page.at
             else NAMED_PLAYLIST.find(page.html)?.value?.let { "https://$it" } ?: page.at
@@ -308,14 +308,14 @@ class Transfer(
             return when (val page = fetch(SpotifyLink.embedUrl(id))) {
                 is Page.Ok -> SpotifyLink.read(page.html, id)
                 Page.Missing -> ImportRead.Failed("Spotify has no public playlist at that link. A private one can come in Spotify's data download.")
-                Page.Unreachable -> ImportRead.Failed("AETHER couldn't reach Spotify.")
+                Page.Unreachable -> ImportRead.Failed("Galaxy couldn't reach Spotify.")
             }
         }
         AppleMusicLink.playlistId(input)?.let { id ->
             return when (val page = fetch(input)) {
                 is Page.Ok -> AppleMusicLink.read(page.html, id)
                 Page.Missing -> ImportRead.Failed("Apple Music has no public playlist at that link.")
-                Page.Unreachable -> ImportRead.Failed("AETHER couldn't reach Apple Music.")
+                Page.Unreachable -> ImportRead.Failed("Galaxy couldn't reach Apple Music.")
             }
         }
         return ImportRead.Failed(
@@ -369,7 +369,7 @@ class Transfer(
     // --- Writing out -----------------------------------------------------------------------------
 
     enum class Format(val label: String, val detail: String, val mime: String, val extension: String) {
-        AETHER("AETHER file", "Every song whole, for AETHER on this phone or another. Imported again, it adds only what's missing.", "application/json", "json"),
+        AETHER("Galaxy file", "Every song whole, for Galaxy on this phone or another. Imported again, it adds only what's missing.", "application/json", "json"),
         M3U("M3U playlist", "For other players: each song by name, with its YouTube Music link.", "application/vnd.apple.mpegurl", "m3u8"),
         CSV("Spreadsheet", "A CSV of titles, artists, albums, lengths and links.", "text/csv", "csv"),
     }
@@ -377,7 +377,7 @@ class Transfer(
     /** What a playlist's file is called when it's written: its name, the date for all of them. */
     fun fileName(title: String, format: Format): String = "${title.replace(UNSAFE, " ").trim().ifEmpty { "Playlist" }}.${format.extension}"
 
-    fun allFileName(): String = "AETHER playlists ${LocalDate.now()}.json"
+    fun allFileName(): String = "Galaxy playlists ${LocalDate.now()}.json"
 
     /** One playlist written to [uri] as [format]. */
     suspend fun export(playlistId: Long, format: Format, uri: Uri): Boolean = withContext(Dispatchers.IO) {

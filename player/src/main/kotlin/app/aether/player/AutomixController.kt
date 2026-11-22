@@ -3882,7 +3882,7 @@ class AutomixController(
         /** How long the popup's preview outlives the last plan that laid it out. */
         const val MIX_PREVIEW_STALE_MS = 1_500L
 
-        const val TAG = "AetherAutomix"
+        const val TAG = "GalaxyAutomix"
 
         /**
          * Used only before a pair has been analysed, or when the evidence is

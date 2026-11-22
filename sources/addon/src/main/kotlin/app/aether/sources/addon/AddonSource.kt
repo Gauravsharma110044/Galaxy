@@ -158,7 +158,7 @@ class AddonSource(
         }
         val answer: AddonStream = asked ?: given?.let { AddonStream(it, null, null, null, false, emptyMap(), null) }
             ?: return miss ?: Outcome.Err(SourceError.NotPlayable("no stream"))
-        if (answer.encrypted) return Outcome.Err(SourceError.NotPlayable("This source's stream is encrypted, and AETHER plays open media only."))
+        if (answer.encrypted) return Outcome.Err(SourceError.NotPlayable("This source's stream is encrypted, and Galaxy plays open media only."))
         if (!answer.url.startsWith("https://") && !answer.url.startsWith("http://")) return Outcome.Err(SourceError.NotPlayable("The source gave no address to play."))
         val manifest = when (answer.manifest) {
             "dash" -> Stream.Manifest.DASH
@@ -168,7 +168,7 @@ class AddonSource(
             else Stream.Manifest.NONE
         }
         if (manifest != Stream.Manifest.NONE && protectedManifest(answer.url, answer.headers, manifest)) {
-            return Outcome.Err(SourceError.NotPlayable("This source's stream is protected, and AETHER plays open media only."))
+            return Outcome.Err(SourceError.NotPlayable("This source's stream is protected, and Galaxy plays open media only."))
         }
         val stream = Stream(
             url = answer.url,
@@ -367,9 +367,9 @@ class AddonSource(
                         if (!response.isSuccessful) return@use Outcome.Err(SourceError.Server(response.code))
                         val manifest = response.body?.bytes()?.let { AddonProtocol.manifest(it) } ?: return@use Outcome.Err(SourceError.Server(null))
                         when {
-                            manifest.onlyForBitChord -> Outcome.Err(SourceError.NotPlayable("${manifest.name} answers only the BitChord app, which proves who it is with a key Android vouches for. AETHER can't, and doesn't pretend to."))
+                            manifest.onlyForBitChord -> Outcome.Err(SourceError.NotPlayable("${manifest.name} answers only the BitChord app, which proves who it is with a key Android vouches for. Galaxy can't, and doesn't pretend to."))
                             // Search is what everything starts from; streams may come with the rows.
-                            !manifest.canSearch -> Outcome.Err(SourceError.NotPlayable("${manifest.name} can't search, so AETHER can't find songs on it."))
+                            !manifest.canSearch -> Outcome.Err(SourceError.NotPlayable("${manifest.name} can't search, so Galaxy can't find songs on it."))
                             else -> Outcome.Ok(AddonSource(address.trim(), http, manifest, choices, losslessOutput))
                         }
                     }

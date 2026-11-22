@@ -113,7 +113,7 @@ internal object OggOpus {
         }
         return ByteArrayOutputStream().apply {
             write("OpusTags".toByteArray(StandardCharsets.US_ASCII))
-            val vendor = "AETHER".toByteArray(StandardCharsets.UTF_8)
+            val vendor = "Galaxy".toByteArray(StandardCharsets.UTF_8)
             le32(vendor.size)
             write(vendor)
             le32(comments.size)
