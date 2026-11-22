@@ -106,7 +106,7 @@ import app.aether.player.Downloads
 import app.aether.ui.FolderPreview
 import app.aether.ui.rememberStagedRows
 
-private enum class Shelf(val label: String) { Playlists("Playlists"), Kept("Kept"), Phone("On this phone"), Songs("Songs"), Albums("Albums"), Artists("Artists"), History("History") }
+private enum class Shelf(val label: String) { Playlists("Playlists"), Sky("Sky"), Kept("Kept"), Phone("On this phone"), Songs("Songs"), Albums("Albums"), Artists("Artists"), History("History") }
 
 /** The listener's own archive. */
 @Composable
@@ -124,6 +124,7 @@ fun LibraryScreen() {
     val playlistsFlow = remember(container) { container.library.playlistsWithPreview() }
     val playlists by playlistsFlow.collectAsStateWithLifecycle(emptyList())
     val saved by container.library.savedPlaylists.collectAsStateWithLifecycle(emptyList())
+    val galaxyAccent by container.settings.galaxyAccent.collectAsStateWithLifecycle()
     val albums by container.library.albums.collectAsStateWithLifecycle(emptyList())
     val artists by container.library.artists.collectAsStateWithLifecycle(emptyList())
     val historyFlow = remember(container) { container.library.history(200) }
@@ -205,6 +206,14 @@ fun LibraryScreen() {
                         }
                     }
                 }
+                Shelf.Sky -> constellationItems(
+                    buildList {
+                        add(ConstellationItem(Route.Liked, -1L, "Liked songs", liked.size))
+                        playlists.forEach { p -> add(ConstellationItem(Route.LocalPlaylist(p.id), p.id, p.title, p.count)) }
+                    },
+                    galaxyAccent,
+                    open = { r -> actions.go(r) },
+                )
                 Shelf.Songs -> {
                     if (liked.isEmpty()) item { Notice("No liked songs yet", "Tap the heart on Now Playing to keep a song here.") }
                     else {
