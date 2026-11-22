@@ -255,7 +255,7 @@ fun SettingsScreen() {
                     selected = SleepFades.indexOf(sleepFade).coerceAtLeast(0),
                     onSelect = { settings.setSleepFadeSeconds(SleepFades[it]) },
                 )
-                Toggle("Skip silence"Toggle("Skip silence", "Jump over the silent stretches inside a song, such as a long quiet gap at its start or end. Off while crossfade or Automix is on, since they time a song's ending themselves.", skipSilence) { settings.setSkipSilence(!skipSilence) }
+                Toggle("Skip silence", "Jump over the silent stretches inside a song, such as a long quiet gap at its start or end. Off while crossfade or Automix is on, since they time a song's ending themselves.", skipSilence) { settings.setSkipSilence(!skipSilence) }
                 Toggle(
                     "Automix",
                     "Each song is listened to first, on the phone: its tempo, beats and bars, its phrases, its key, where the voice is. Then one runs into the next as a DJ would: on the bar, the next song's tempo matched to this one's, the bass handed over, a filter or an echo where it suits, and long only between keys that sit together. A pair that can't be mixed crossfades instead, for the length above or six seconds when that's off. To be measured a song is fetched whole, the next one while this one plays, and then played from what was fetched. Never between an album's songs that run into each other, nor while a DAC plays bit-perfect.",
