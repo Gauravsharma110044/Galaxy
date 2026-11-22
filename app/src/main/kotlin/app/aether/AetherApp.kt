@@ -330,6 +330,8 @@ class AetherApp : Application(), PlaybackEnvironment, SingletonImageLoader.Facto
     override val http: OkHttpClient get() = container.http
     override val equaliser: StateFlow<EqProfile?> get() = container.equaliser.shaping
     override val crossfadeSeconds: StateFlow<Int> get() = container.settings.crossfade
+    override val playbackSpeed: StateFlow<Float> get() = container.settings.playbackSpeed
+    override val skipSilence: StateFlow<Boolean> get() = container.settings.skipSilence
     override val automix: StateFlow<Boolean> get() = container.settings.automix
     override suspend fun suggestionsAfter(track: Track): List<Track> {
         val source = container.sources.of(track.id) ?: return emptyList()
