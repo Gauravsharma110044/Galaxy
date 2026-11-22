@@ -82,7 +82,8 @@ internal fun InsightsPane(view: Int) {
         when (view) {
             1 -> StatsView(history)
             2 -> SmartView(history, liked)
-            else -> DuplicatesView(liked)
+            3 -> DuplicatesView(liked)
+            else -> MixesView(history, liked)
         }
     }
 }
