@@ -97,6 +97,20 @@ fun SettingsScreen() {
             )
         }
     }
+    // Galaxy's own settings in one file (playlists have their own export, above).
+    val settingsContext = androidx.compose.ui.platform.LocalContext.current
+    val backupOut = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) scope.launch {
+            val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { app.aether.SettingsBackup.write(settingsContext, uri) }
+            notes.note(if (ok) "Settings backup written" else "The file couldn't be written")
+        }
+    }
+    val backupIn = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { app.aether.SettingsBackup.read(settingsContext, uri) }
+            notes.note(if (ok) "Settings restored. Close Galaxy and open it again to apply them" else "That isn't a Galaxy settings backup")
+        }
+    }
     val haptics by settings.haptics.collectAsStateWithLifecycle()
     val reduce by settings.reduceMotion.collectAsStateWithLifecycle()
     val efficient by settings.efficient.collectAsStateWithLifecycle()
@@ -112,6 +126,8 @@ fun SettingsScreen() {
     val balance by settings.balance.collectAsStateWithLifecycle()
     val mono by settings.mono.collectAsStateWithLifecycle()
     val preamp by settings.preampDb.collectAsStateWithLifecycle()
+    val privateDownloads by settings.privateDownloads.collectAsStateWithLifecycle()
+    val movingLeft by container.downloads.movedLeft.collectAsStateWithLifecycle()
     val automix by settings.automix.collectAsStateWithLifecycle()
     val fullScreen by settings.fullScreen.collectAsStateWithLifecycle()
     val songVideo by settings.songVideo.collectAsStateWithLifecycle()
@@ -380,6 +396,34 @@ fun SettingsScreen() {
                     Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         GlassPill("Import", small = true, onClick = { importing = true })
                         GlassPill("Export", small = true, onClick = { exportAll.launch(container.transfer.allFileName()) })
+                    }
+                }
+                Rule()
+                Toggle(
+                    "Keep downloads inside Galaxy",
+                    "Songs you keep are stored in Galaxy's own private space and play offline as ever. Your file manager doesn't list them and uninstalling Galaxy deletes them. Off writes each kept song to Music/Galaxy as an ordinary file instead.",
+                    privateDownloads,
+                ) { settings.setPrivateDownloads(!privateDownloads) }
+                Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Words(
+                        "Move earlier downloads in",
+                        if (movingLeft > 0) "Moving: $movingLeft left." else "Songs kept earlier as files in Music/Galaxy are fetched again into Galaxy, and each file is removed once its copy is whole. Needs a connection; a song that can't be fetched keeps its file.",
+                        Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    GlassPill("Move", small = true, onClick = { container.downloads.moveIntoApp() })
+                }
+                Rule()
+                Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Words(
+                        "Settings backup",
+                        "Keep Galaxy's settings (sound, equaliser and each song's own sound, look, timers) in one file, and bring them back. Playlists and liked songs are in Your playlists above. Nothing about an account goes in it.",
+                        Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        GlassPill("Restore", small = true, onClick = { backupIn.launch(arrayOf("application/json", "*/*")) })
+                        GlassPill("Back up", small = true, onClick = { backupOut.launch("galaxy-settings.json") })
                     }
                 }
                 Rule()
