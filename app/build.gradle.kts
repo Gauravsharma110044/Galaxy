@@ -52,7 +52,7 @@ android {
     }
     buildTypes {
         debug {
-            applicationIdSuffix = ".debug"
+            // Same package as a release (app.galaxy.music): no .debug suffix.
             // Not debuggable by default, as in PODIUM: ART compiles it, so shaders and scrolling run
             // as they will for listeners. For a debugger: -Paether.debuggable=true
             isDebuggable = providers.gradleProperty("aether.debuggable").orNull == "true"
