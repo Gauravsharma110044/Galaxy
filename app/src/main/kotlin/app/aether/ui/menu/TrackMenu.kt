@@ -122,6 +122,13 @@ fun TrackMenu(track: Track, close: () -> Unit, inPlayer: Boolean = false) {
                 }
             }
             Entry(Glyph.Share, "Share song card") { actions.card.openSong(track); close() }
+            val songChoices by container.equaliser.songChoices.collectAsStateWithLifecycle()
+            val ownSound = songChoices[track.id.value]
+            Entry(Glyph.Gear, "Sound for this song", value = app.aether.core.model.EqTunings.All.firstOrNull { it.id == ownSound }?.name ?: "Same as everywhere") {
+                val ids = listOf<String?>(null) + app.aether.core.model.EqTunings.All.map { it.id }
+                val next = ids[(ids.indexOf(ownSound).coerceAtLeast(0) + 1) % ids.size]
+                container.equaliser.chooseForSong(track.id.value, next)
+            }
             Head("Go to")
             Entry(Glyph.Discover, "Start radio") { actions.play(listOf(track)); close() }
             track.album?.id?.let { album -> Entry(Glyph.Library, "Go to album") { actions.go(Route.Album(album)) } }
