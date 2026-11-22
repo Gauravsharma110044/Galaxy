@@ -1,0 +1,53 @@
+name: Build Galaxy test APK
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-galaxy.yml'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout Galaxy customization
+        uses: actions/checkout@v4
+      - name: Checkout pinned AETHER source
+        uses: actions/checkout@v4
+        with:
+          repository: GHOSTxASR/AETHER
+          ref: 0117c6eb0deaca03a045d4feb2fdfc1bca90d046
+          path: upstream
+          persist-credentials: false
+      - name: Expand Galaxy source and retain original notices
+        run: |
+          unzip -oq *Galaxy-changes-3.0.0.zip -d upstream
+          rsync -a --exclude='.git' upstream/ ./
+          rm -rf upstream
+          git config user.name 'Galaxy build'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet || git commit -m 'Publish complete Galaxy source with upstream GPL notices'
+          git push
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install exact Android toolchain
+        run: sdkmanager 'platform-tools' 'platforms;android-37.0' 'build-tools;36.0.0' 'build-tools;37.0.0' 'ndk;28.2.13676358' 'cmake;3.22.1'
+      - name: Build signed test APK
+        run: bash gradlew :app:assembleDebug --no-daemon --max-workers=2 -Dorg.gradle.parallel=false
+      - name: Package corresponding source and checksums
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk Galaxy-3.0.0-test.apk
+          git archive --format=zip HEAD -o Galaxy-source-3.0.0.zip
+          sha256sum Galaxy-3.0.0-test.apk Galaxy-source-3.0.0.zip > SHA256SUMS.txt
+      - name: Publish test candidate and corresponding source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create galaxy-test-${{ github.run_number }} Galaxy-3.0.0-test.apk Galaxy-source-3.0.0.zip SHA256SUMS.txt --title 'Galaxy 3.0.0 test candidate' --prerelease --notes 'Space-themed AETHER derivative, GPL-3.0. Original AETHER by GHOSTxASR / Ashmit Roy. Android 10+. Separate installation package app.galaxy.music.debug. Build and APK signature checked; live phone UI, playback and performance have not been verified. The galaxy is an artistic depth-rendered visualization with restrained rotation and twinkling stars, not an astronomy photograph or interactive 3D model. This is a debug-signed test build. Review BUILDING-GALAXY.md before using or rebuilding.'
