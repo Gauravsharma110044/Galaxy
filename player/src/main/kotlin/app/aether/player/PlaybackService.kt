@@ -286,8 +286,11 @@ class PlaybackService : MediaLibraryService() {
             // endings by, so it stands down while either is on.
             combine(env.skipSilence, env.automix, env.crossfadeSeconds) { skip, mix, fade -> skip && !mix && fade == 0 }
                 .collect { on ->
-                    active.player.skipSilenceEnabled = on
-                    spare?.player?.skipSilenceEnabled = on
+                    if (on || silenceTouched) {
+                        silenceTouched = true
+                        active.player.skipSilenceEnabled = on
+                        spare?.player?.skipSilenceEnabled = on
+                    }
                 }
         }
         scope.launch {
