@@ -99,6 +99,29 @@ jobs:
           git add -A
           git diff --cached --quiet || git commit -m 'Galaxy branding: replace remaining AETHER names and the splash icon'
           git push
+      - name: Remove leftover upstream artwork and website
+        run: |
+          if [ -d site ]; then
+          git rm -r -q --ignore-unmatch site docs/images vercel.json .vercelignore app/src/main/res/drawable-nodpi/welcome_clouds.png app/src/main/res/drawable-nodpi/art_statue.jpg app/src/main/res/drawable-nodpi/art_god_*.jpg
+          python3 - <<'PY'
+          import re
+          p = 'app/src/main/kotlin/app/aether/ui/home/Home.kt'
+          s = open(p, encoding='utf-8').read()
+          s2 = re.sub(r'private val Statues = listOf\(.*?\n\)\n', 'private val Statues = listOf(R.drawable.galaxy_realistic)\n', s, count=1, flags=re.S)
+          assert s2 != s
+          open(p, 'w', encoding='utf-8').write(s2)
+          PY
+          git add -A
+          git commit -m 'Remove leftover upstream statue artwork, screenshots and website'
+          git push
+          fi
+      - name: Use the fixed Galaxy signing key
+        env:
+          KS: ${{ secrets.GALAXY_DEBUG_KEYSTORE_B64 }}
+        run: |
+          mkdir -p ~/.android
+          echo "$KS" | base64 -d > ~/.android/debug.keystore
+          test -s ~/.android/debug.keystore
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
