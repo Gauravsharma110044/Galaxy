@@ -278,7 +278,7 @@ class PlaybackService : MediaLibraryService() {
         scope.launch {
             env.playbackSpeed.collect { speed ->
                 AutomixState.playbackSpeed.value = speed
-                automix.applyPlaybackSpeed(speed)
+                if (speed != 1f || speedTouched) { speedTouched = true; automix.applyPlaybackSpeed(speed) }
             }
         }
         scope.launch {
