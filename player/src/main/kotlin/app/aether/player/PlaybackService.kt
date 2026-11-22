@@ -94,6 +94,12 @@ interface PlaybackEnvironment {
     /** Automix: songs measured and mixed into each other (BitChord's). */
     val automix: StateFlow<Boolean> get() = AutomixOff
 
+    /** How fast songs play; 1 is as recorded. */
+    val playbackSpeed: StateFlow<Float> get() = SpeedNormal
+
+    /** Whether silent stretches inside a song are skipped. */
+    val skipSilence: StateFlow<Boolean> get() = AutomixOff
+
     /** What the song's own catalogue would play after [track] (its radio); empty when it has nothing. */
     suspend fun suggestionsAfter(track: Track): List<Track> = emptyList()
 
@@ -255,6 +261,18 @@ class PlaybackService : MediaLibraryService() {
                 AutomixState.crossfadeSeconds.value = if (on) seconds else 0
                 AutomixState.smartFadeEnabled.value = on
                 crossfader.seconds = if (on) 0 else seconds
+            }
+        }
+        scope.launch {
+            env.playbackSpeed.collect { speed ->
+                AutomixState.playbackSpeed.value = speed
+                automix.applyPlaybackSpeed(speed)
+            }
+        }
+        scope.launch {
+            env.skipSilence.collect { on ->
+                active.player.skipSilenceEnabled = on
+                spare?.player?.skipSilenceEnabled = on
             }
         }
         scope.launch { env.lateCopies.collect(::carryOver) }
@@ -873,6 +891,9 @@ private const val SleepFadeStepMs = 50L
 
 /** Automix's setting for an environment that has none. */
 private val AutomixOff: StateFlow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)
+
+/** Playback speed for an environment that has none. */
+private val SpeedNormal: StateFlow<Float> = kotlinx.coroutines.flow.MutableStateFlow(1f)
 
 internal const val EXTRA_OUTPUT = "aether.output"
 internal const val EXTRA_CARRIED = "aether.carried"
