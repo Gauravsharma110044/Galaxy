@@ -55,6 +55,28 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/share_paths" />
         </provider>
+        <!-- The home-screen widget and the quick-settings tile: the song, and play / pause / skip. -->
+        <receiver
+            android:name=".GalaxyWidget"
+            android:exported="false"
+            android:label="Galaxy">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/galaxy_widget_info" />
+        </receiver>
+        <service
+            android:name=".GalaxyTile"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
         <!-- What Android's installer says about an update; only the installer's own intent reaches it. -->
         <receiver
             android:name=".update.UpdateInstallReceiver"
