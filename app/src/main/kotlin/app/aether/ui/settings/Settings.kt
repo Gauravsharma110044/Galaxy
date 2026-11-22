@@ -106,6 +106,8 @@ fun SettingsScreen() {
     val artistArt by settings.artistArt.collectAsStateWithLifecycle()
     val lyricsStyle by settings.lyricsStyle.collectAsStateWithLifecycle()
     val crossfade by settings.crossfade.collectAsStateWithLifecycle()
+    val playbackSpeed by settings.playbackSpeed.collectAsStateWithLifecycle()
+    val skipSilence by settings.skipSilence.collectAsStateWithLifecycle()
     val automix by settings.automix.collectAsStateWithLifecycle()
     val fullScreen by settings.fullScreen.collectAsStateWithLifecycle()
     val songVideo by settings.songVideo.collectAsStateWithLifecycle()
@@ -238,6 +240,14 @@ fun SettingsScreen() {
                     selected = CrossfadeRules.Choices.indexOf(crossfade).coerceAtLeast(0),
                     onSelect = { settings.setCrossfade(CrossfadeRules.Choices[it]) },
                 )
+                Choice(
+                    title = "Playback speed",
+                    detail = "How fast songs play. The pitch stays where it was. Automix steps aside from a song's ending while this is not 1x.",
+                    options = PlaybackSpeeds.map { speedLabel(it) },
+                    selected = PlaybackSpeeds.indexOfFirst { kotlin.math.abs(it - playbackSpeed) < 0.001f }.coerceAtLeast(0),
+                    onSelect = { settings.setPlaybackSpeed(PlaybackSpeeds[it]) },
+                )
+                Toggle("Skip silence", "Jump over the silent stretches inside a song, such as a long quiet gap at its start or end.", skipSilence) { settings.setSkipSilence(!skipSilence) }
                 Toggle(
                     "Automix",
                     "Each song is listened to first, on the phone: its tempo, beats and bars, its phrases, its key, where the voice is. Then one runs into the next as a DJ would: on the bar, the next song's tempo matched to this one's, the bass handed over, a filter or an echo where it suits, and long only between keys that sit together. A pair that can't be mixed crossfades instead, for the length above or six seconds when that's off. To be measured a song is fetched whole, the next one while this one plays, and then played from what was fetched. Never between an album's songs that run into each other, nor while a DAC plays bit-perfect.",
@@ -589,6 +599,12 @@ private fun Toggle(title: String, detail: String, on: Boolean, onToggle: () -> U
 }
 
 /** One of a few: the words, then the choices on one bar of glass, the chosen one under the lit drop. */
+/** The speeds offered in Settings and cycled in a song's menu. */
+val PlaybackSpeeds = listOf(0.75f, 1f, 1.25f, 1.5f, 2f)
+
+/** A speed written for a label: 1x, 1.25x. */
+fun speedLabel(speed: Float): String = (if (speed == speed.toInt().toFloat()) speed.toInt().toString() else speed.toString().trimEnd('0')) + "x"
+
 @Composable
 private fun Choice(title: String, detail: String, options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     Column(Modifier.fillMaxWidth().padding(vertical = 18.dp)) {
