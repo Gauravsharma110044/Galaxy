@@ -387,6 +387,11 @@ class Settings(context: Context) {
     val playbackSpeed: StateFlow<Float> = _playbackSpeed.asStateFlow()
     fun setPlaybackSpeed(speed: Float) { prefs.edit().putFloat(PLAYBACK_SPEED, speed).apply(); _playbackSpeed.value = speed }
 
+    private val _sleepFade = MutableStateFlow(prefs.getInt(SLEEP_FADE, 0))
+    /** Seconds the sleep timer takes to fade the music out before it stops; 0 keeps the old behaviour. */
+    val sleepFadeSeconds: StateFlow<Int> = _sleepFade.asStateFlow()
+    fun setSleepFadeSeconds(seconds: Int) { prefs.edit().putInt(SLEEP_FADE, seconds).apply(); _sleepFade.value = seconds }
+
     private val _skipSilence = flag(SKIP_SILENCE, false)
     /** Skip the silent stretches inside a song. */
     val skipSilence: StateFlow<Boolean> = _skipSilence.asStateFlow()
@@ -469,6 +474,7 @@ class Settings(context: Context) {
         const val CROSSFADE = "crossfade"
         const val PLAYBACK_SPEED = "playback_speed"
         const val SKIP_SILENCE = "skip_silence"
+        const val SLEEP_FADE = "sleep_fade_seconds"
         const val AUTOMIX = "automix"
         const val SONG_ORDERS = "song_orders"
         const val FULL_SCREEN = "full_screen"
