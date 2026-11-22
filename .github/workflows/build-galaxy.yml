@@ -122,6 +122,21 @@ jobs:
           mkdir -p ~/.android
           echo "$KS" | base64 -d > ~/.android/debug.keystore
           test -s ~/.android/debug.keystore
+          if ! grep -q 'user.home' app/build.gradle.kts; then
+          python3 - <<'PY'
+          p = 'app/build.gradle.kts'
+          s = open(p, encoding='utf-8').read()
+          a = '    signingConfigs {\n'
+          assert a in s
+          s = s.replace(a, a + '        getByName("debug") {\n            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")\n            storePassword = "android"\n            keyAlias = "androiddebugkey"\n            keyPassword = "android"\n        }\n', 1)
+          open(p, 'w', encoding='utf-8').write(s)
+          PY
+          git config user.name 'Galaxy build'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Sign debug builds with the fixed Galaxy key so updates install in place'
+          git push
+          fi
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
