@@ -259,7 +259,7 @@ fun LibraryScreen() {
                 }
                 Shelf.History -> {
                     item(key = "history-tools") {
-                        GlassSegments(listOf("Plays", "Stats", "Smart", "Duplicates"), historyView, { historyView = it }, Modifier.padding(horizontal = Space.edge, vertical = 6.dp))
+                        GlassSegments(listOf("Plays", "Stats", "Smart", "Copies", "Mixes"), historyView, { historyView = it }, Modifier.padding(horizontal = Space.edge, vertical = 6.dp))
                     }
                     if (historyView != 0) item(key = "insights:$historyView") { InsightsPane(historyView) } else if (history.isEmpty()) item { Notice("Nothing played yet", "Songs you listen to past their first half-minute appear here.") }
                     else {
