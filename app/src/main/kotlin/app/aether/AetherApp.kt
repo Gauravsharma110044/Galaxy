@@ -340,6 +340,7 @@ class AetherApp : Application(), PlaybackEnvironment, SingletonImageLoader.Facto
     override val sleepFadeSeconds: StateFlow<Int> get() = container.settings.sleepFadeSeconds
     override val balance: StateFlow<Float> get() = container.settings.balance
     override val mono: StateFlow<Boolean> get() = container.settings.mono
+    override val preampDb: StateFlow<Float> get() = container.settings.preampDb
     override val automix: StateFlow<Boolean> get() = container.settings.automix
     override suspend fun suggestionsAfter(track: Track): List<Track> {
         val source = container.sources.of(track.id) ?: return emptyList()
