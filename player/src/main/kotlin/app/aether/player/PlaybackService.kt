@@ -109,6 +109,9 @@ interface PlaybackEnvironment {
     /** Whether both ears hear the same, the two channels added. */
     val mono: StateFlow<Boolean> get() = AutomixOff
 
+    /** A gain on everything, in decibels; 0 leaves the sound as it is. */
+    val preampDb: StateFlow<Float> get() = BalanceCentre
+
     /** What the song's own catalogue would play after [track] (its radio); empty when it has nothing. */
     suspend fun suggestionsAfter(track: Track): List<Track> = emptyList()
 
@@ -292,6 +295,7 @@ class PlaybackService : MediaLibraryService() {
         }
         scope.launch { env.balance.collect { StereoOutput.balance = it; reportRoute() } }
         scope.launch { env.mono.collect { StereoOutput.mono = it; reportRoute() } }
+        scope.launch { env.preampDb.collect { StereoOutput.preampDb = it; reportRoute() } }
         scope.launch { env.lateCopies.collect(::carryOver) }
         scope.launch { restore() }
         scope.launch { countPlays() }
