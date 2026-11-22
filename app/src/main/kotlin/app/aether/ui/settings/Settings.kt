@@ -108,6 +108,7 @@ fun SettingsScreen() {
     val crossfade by settings.crossfade.collectAsStateWithLifecycle()
     val playbackSpeed by settings.playbackSpeed.collectAsStateWithLifecycle()
     val skipSilence by settings.skipSilence.collectAsStateWithLifecycle()
+    val sleepFade by settings.sleepFadeSeconds.collectAsStateWithLifecycle()
     val automix by settings.automix.collectAsStateWithLifecycle()
     val fullScreen by settings.fullScreen.collectAsStateWithLifecycle()
     val songVideo by settings.songVideo.collectAsStateWithLifecycle()
@@ -247,7 +248,14 @@ fun SettingsScreen() {
                     selected = PlaybackSpeeds.indexOfFirst { kotlin.math.abs(it - playbackSpeed) < 0.001f }.coerceAtLeast(0),
                     onSelect = { settings.setPlaybackSpeed(PlaybackSpeeds[it]) },
                 )
-                Toggle("Skip silence", "Jump over the silent stretches inside a song, such as a long quiet gap at its start or end.", skipSilence) { settings.setSkipSilence(!skipSilence) }
+                Choice(
+                    title = "Sleep timer fade-out",
+                    detail = "How long the music takes to fade to nothing before the sleep timer stops it. Off stops it as before (or fades over the crossfade's length when sleeping after a song).",
+                    options = SleepFades.map { if (it == 0) "Off" else "${it}s" },
+                    selected = SleepFades.indexOf(sleepFade).coerceAtLeast(0),
+                    onSelect = { settings.setSleepFadeSeconds(SleepFades[it]) },
+                )
+                Toggle("Skip silence"Toggle("Skip silence", "Jump over the silent stretches inside a song, such as a long quiet gap at its start or end. Off while crossfade or Automix is on, since they time a song's ending themselves.", skipSilence) { settings.setSkipSilence(!skipSilence) }
                 Toggle(
                     "Automix",
                     "Each song is listened to first, on the phone: its tempo, beats and bars, its phrases, its key, where the voice is. Then one runs into the next as a DJ would: on the bar, the next song's tempo matched to this one's, the bass handed over, a filter or an echo where it suits, and long only between keys that sit together. A pair that can't be mixed crossfades instead, for the length above or six seconds when that's off. To be measured a song is fetched whole, the next one while this one plays, and then played from what was fetched. Never between an album's songs that run into each other, nor while a DAC plays bit-perfect.",
@@ -599,6 +607,9 @@ private fun Toggle(title: String, detail: String, on: Boolean, onToggle: () -> U
 }
 
 /** One of a few: the words, then the choices on one bar of glass, the chosen one under the lit drop. */
+/** Sleep timer fade lengths in seconds; 0 is off. */
+val SleepFades = listOf(0, 5, 15, 30, 60)
+
 /** The speeds offered in Settings and cycled in a song's menu. */
 val PlaybackSpeeds = listOf(0.75f, 1f, 1.25f, 1.5f, 2f)
 
