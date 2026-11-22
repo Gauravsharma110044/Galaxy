@@ -30,6 +30,34 @@ class EqualiserStore(private val context: Context, scope: CoroutineScope) {
     private val _on = MutableStateFlow(prefs.getBoolean(ON, false))
     val on: StateFlow<Boolean> = _on.asStateFlow()
 
+    /** The id of the song playing now, set by the app, so a song with a sound of its own gets it. */
+    val currentSong = MutableStateFlow<String?>(null)
+
+    private val _songChoices = MutableStateFlow(readSongChoices())
+
+    /** Song id to the id of the tuning chosen for that song alone. */
+    val songChoices: StateFlow<Map<String, String>> = _songChoices.asStateFlow()
+
+    /** Gives [songId] the tuning [profileId] whatever the equaliser is set to, or back to the common one when null. */
+    fun chooseForSong(songId: String, profileId: String?) {
+        _songChoices.value = if (profileId == null) _songChoices.value - songId else _songChoices.value + (songId to profileId)
+        val o = JSONObject()
+        _songChoices.value.forEach { (k, v) -> o.put(k, v) }
+        prefs.edit().putString(SONGS, o.toString()).apply()
+    }
+
+    private fun readSongChoices(): Map<String, String> = runCatching {
+        val o = JSONObject(prefs.getString(SONGS, "{}"))
+        o.keys().asSequence().associateWith { o.getString(it) }
+    }.getOrDefault(emptyMap())
+
+    /** The tuning set for the song playing now, or null when it has none (or the tuning has gone). */
+    private fun songProfile(): kotlinx.coroutines.flow.Flow<EqProfile?> =
+        combine(_songChoices, currentSong, _imported, _headphones) { choices, song, mine, phones ->
+            val id = song?.let { choices[it] } ?: return@combine null
+            EqTunings.All.firstOrNull { it.id == id } ?: mine.firstOrNull { it.id == id } ?: phones.firstOrNull { it.id == id }
+        }
+
     private val _imported = MutableStateFlow(readImported())
     val imported: StateFlow<List<EqProfile>> = _imported.asStateFlow()
 
@@ -44,7 +72,7 @@ class EqualiserStore(private val context: Context, scope: CoroutineScope) {
     }.stateIn(scope, SharingStarted.Eagerly, EqTunings.Flat)
 
     /** What the music should go through; null when nothing should touch it. */
-    val shaping: StateFlow<EqProfile?> = combine(_on, chosen) { on, profile -> profile.takeIf { on && it.shaping } }
+    val shaping: StateFlow<EqProfile?> = combine(_on, chosen, songProfile()) { on, profile, own -> (own ?: profile.takeIf { on })?.takeIf { it.shaping } }
         .stateIn(scope, SharingStarted.Eagerly, null)
 
     init {
@@ -132,5 +160,6 @@ class EqualiserStore(private val context: Context, scope: CoroutineScope) {
         const val ON = "on"
         const val CHOSEN = "chosen"
         const val IMPORTED = "imported"
+        const val SONGS = "song_choices"
     }
 }
